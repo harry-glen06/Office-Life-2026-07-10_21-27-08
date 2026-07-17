@@ -1,66 +1,51 @@
 using UnityEngine;
-using UnityEngine.UI;   // for Button
-using TMPro;            // for TextMeshProUGUI
-
+using UnityEngine.UI;
+using TMPro;
+using System.Collections.Generic;   // for List
 
 public class DayUI : MonoBehaviour
 {
-    // --- References dragged in via the Inspector ---
-    [SerializeField] private Button workButton;
-    [SerializeField] private TextMeshProUGUI statusText;
-    [SerializeField] private Button socialiseButton;
-    [SerializeField] private Button coffeeButton;
+    // Pair each button with the activity it triggers.
+    // [System.Serializable] lets this show up in the Inspector.
+    [System.Serializable]
+    public class ActivitySlot
+    {
+        public Button button;
+        public ActivityDefinition activity;
+    }
 
-    // --- The simulation state (plain C#, same as DayRunner used) ---
+    [SerializeField] private List<ActivitySlot> slots;   // your activities, set in Inspector
+    [SerializeField] private TextMeshProUGUI statusText;
+
     private Employee employee;
     private int clock;
-    private Activity work;
-    private Activity socialise;
-    private Activity coffee;
 
     void Start()
     {
-        // Set up the sim
         employee = new Employee();
-        clock = 540; // 9am
-        work = new Activity("Work", 120, 45, StatType.Career, 7);
-        socialise = new Activity("Socialise", 60, 25, StatType.Relationships, 3);
-        coffee = new Activity("Coffee", 10, -15, StatType.Career, 0); // no stat gain, just energy
+        clock = 540;
 
-        // Wire the button click to our handler.
-        // This is the key line: "when workButton is clicked, call OnWorkClicked"
-        workButton.onClick.AddListener(OnWorkClicked);
-        socialiseButton.onClick.AddListener(OnSocialiseClicked);
-        coffeeButton.onClick.AddListener(OnCoffeeClicked);
+        // Wire every slot's button to the same handler, passing its activity.
+        foreach (ActivitySlot slot in slots)
+        {
+            // capture into a local — explained below, this matters
+            ActivityDefinition activity = slot.activity;
+            slot.button.onClick.AddListener(() => OnActivityClicked(activity));
+        }
 
-        // Show the starting state
         UpdateStatusText();
     }
-    
-    void OnSocialiseClicked()
+
+    // ONE handler for ALL activities.
+    void OnActivityClicked(ActivityDefinition activity)
     {
-        socialise.Perform(employee, ref clock);
-        UpdateStatusText();
-    }
-    
-    void OnCoffeeClicked()
-    {
-        coffee.Perform(employee, ref clock);
+        activity.Perform(employee, ref clock);
         UpdateStatusText();
     }
 
-    // Called every time the Work button is clicked
-    void OnWorkClicked()
-    {
-        work.Perform(employee, ref clock);
-        UpdateStatusText();
-    }
-
-    // Rebuilds the status readout from the current state
     void UpdateStatusText()
     {
         statusText.text = $"Energy: {employee.energy}  Career: {employee.career}  Rel: {employee.relationships}  Time: {FormatTime(clock)}";
-
     }
     
     string FormatTime(int minutes)

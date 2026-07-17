@@ -1,29 +1,18 @@
 using UnityEngine;
 
-public enum StatType
+// This attribute adds a right-click → Create menu entry, so you can make
+// activity assets in the editor. THIS is the line that turns a class into
+// authorable content.
+[CreateAssetMenu(fileName = "NewActivity", menuName = "Office/Activity")]
+public class ActivityDefinition : ScriptableObject
 {
-    Career,
-    Relationships
-}
+    // Data fields — these show up as editable boxes in the Inspector.
+    public string activityName;
+    public int timeCost;
+    public int energyCost;
+    public StatType affects;
+    public int amount;
 
-public class Activity
-{
-    public string name;
-    public int timeCost;     // minutes the activity eats
-    public int energyCost;   // energy spent (NEGATIVE for coffee = restores)
-    public StatType affects; // which stat it moves
-    public int amount;       // base stat gain before the energy penalty
-
-    // A constructor, so making activities is clean.
-    public Activity(string name, int timeCost, int energyCost, StatType affects, int amount)
-    {
-        this.name = name;
-        this.timeCost = timeCost;
-        this.energyCost = energyCost;
-        this.affects = affects;
-        this.amount = amount;
-    }
-    
     public bool Perform(Employee e, ref int clock)
     {
         const int dayEnd = 1020;      // 5pm in minutes

@@ -291,7 +291,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 1, y: 200}
-  m_SizeDelta: {x: 200, y: 50}
+  m_SizeDelta: {x: 500, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &230184887
 MonoBehaviour:
@@ -347,7 +347,7 @@ MonoBehaviour:
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 1
+  m_HorizontalAlignment: 2
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
@@ -1113,10 +1113,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 334f4c942da544e5bbeecc7c522866e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DayUI
-  workButton: {fileID: 1134008372}
+  slots:
+  - button: {fileID: 1134008372}
+    activity: {fileID: 11400000, guid: b528547915046485f802bdac2e293f81, type: 2}
+  - button: {fileID: 749816020}
+    activity: {fileID: 11400000, guid: 6ee018e4f119b4c30a5888d44067cf32, type: 2}
+  - button: {fileID: 1414832099}
+    activity: {fileID: 11400000, guid: 65606a84dc89a493aa01348f26abd4ec, type: 2}
   statusText: {fileID: 230184887}
-  socialiseButton: {fileID: 749816020}
-  coffeeButton: {fileID: 1414832099}
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
