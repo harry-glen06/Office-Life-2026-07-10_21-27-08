@@ -5,6 +5,10 @@ using System.Collections.Generic;   // for List
 
 public class DayUI : MonoBehaviour
 {
+    private float secondsAccumulator = 0f;
+    
+    private bool dayOver = false;
+
     // Pair each button with the activity it triggers.
     // [System.Serializable] lets this show up in the Inspector.
     [System.Serializable]
@@ -35,6 +39,27 @@ public class DayUI : MonoBehaviour
 
         UpdateStatusText();
     }
+    
+    void Update()
+    {
+        if (dayOver) return;
+        
+        if (clock >= 1020)     // 5pm reached
+        {
+            EndDay();
+            return;
+        }
+        
+        secondsAccumulator += Time.deltaTime;   // count real time
+
+        // When a full real second has passed, advance one in-game minute.
+        if (secondsAccumulator >= 1f)
+        {
+            secondsAccumulator -= 1f;   // subtract, don't reset to 0 (keeps the remainder)
+            clock += 1;                 // one minute passes
+            UpdateStatusText();         // refresh the display
+        }
+    }
 
     // ONE handler for ALL activities.
     void OnActivityClicked(ActivityDefinition activity)
@@ -61,6 +86,18 @@ public class DayUI : MonoBehaviour
 
         string suffix = hours < 12 ? "AM" : "PM";
         return $"{displayHours}:{mins.ToString("D2")} {suffix}";
+    }
+    
+    void EndDay()
+    {
+        dayOver = true;
+
+        // Disable every activity button
+        foreach (ActivitySlot slot in slots)
+            slot.button.interactable = false;
+
+        // Show the end-of-day message
+        statusText.text = "Day over — go home";
     }
 }
 
