@@ -31,17 +31,18 @@ public class DayUI : MonoBehaviour
     // Called every time the Work button is clicked
     void OnWorkClicked()
     {
-        // TODO (yours):
-        // 1. Call work.Perform(employee, ref clock)  -- remember ref
-        // 2. Then call UpdateStatusText() to refresh the display
+        work.Perform(employee, ref clock);
+        UpdateStatusText();
     }
 
-    // Rebuilds the status readout from current state
+    // Rebuilds the status readout from the current state
     void UpdateStatusText()
     {
         // TODO (yours):
         // Set statusText.text to a string showing energy, career, relationships, and clock.
         // Use string interpolation like in DayRunner:
         // statusText.text = $"Energy: {employee.energy} ...";
+        statusText.text = $"Energy: {employee.energy}  Career: {employee.career}  Rel: {employee.relationships}  Time: {clock}";
+
     }
 }
