@@ -1196,7 +1196,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 925903257}
   m_Enabled: 0
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ef218cd0225da4dce8759ab94326396e, type: 3}
+  m_Script: {fileID: 0}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DayRunner
 --- !u!4 &925903259

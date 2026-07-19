@@ -7,13 +7,23 @@ public class DaySimulation
     private Employee employee = new Employee();
     private int clock = DayStart;
     private bool dayOver = false;
-
+    
+    private DayState state = DayState.Idle;      // start idle
+    private ActivityDefinition currentActivity;  // what we're doing (null when idle)
+    private int remainingMinutes;                // countdown until it finishes
+    
     // Read-only windows for the UI to DISPLAY (it can look, not touch).
     public int Energy => employee.energy;
     public int Career => employee.career;
     public int Relationships => employee.relationships;
     public int Clock => clock;
     public bool IsDayOver => dayOver;
+    
+    public bool IsBusy => state == DayState.Busy;
+    public int RemainingMinutes => remainingMinutes;
+    
+    public enum DayState { Idle, Busy }
+
 
     // Player picked an activity. Returns true if it happened.
     public bool DoActivity(ActivityDefinition activity)
