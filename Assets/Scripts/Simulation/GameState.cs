@@ -35,4 +35,12 @@ public class GameState
     {
         relationships[c] += amount;
     }
+    
+    public int OverallLikability()
+    {
+        int total = 0;
+        foreach (int value in relationships.Values)
+            total += value;
+        return total;   // or return total/relationships.Count for an average
+    }
 }

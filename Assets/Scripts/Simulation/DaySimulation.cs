@@ -25,7 +25,7 @@ public class DaySimulation
     // Read-only windows for the UI to DISPLAY.
     public int Energy => game.employee.energy;
     public int Career => game.employee.career;
-    public int Relationships => game.employee.relationships;
+    public int Relationships => game.OverallLikability();
     public int Clock => clock;
     public bool IsDayOver => dayOver;
 
@@ -63,7 +63,7 @@ public class DaySimulation
 
         if (state == DayState.Busy)
         {
-            currentActivity.AdvanceOneMinute(game.employee, ref energyAccumulator, ref gainAccumulator);
+            currentActivity.AdvanceOneMinute(game, ref energyAccumulator, ref gainAccumulator);
 
             remainingMinutes -= 1;
             if (remainingMinutes <= 0)

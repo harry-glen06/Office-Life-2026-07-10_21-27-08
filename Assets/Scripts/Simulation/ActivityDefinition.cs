@@ -1,83 +1,70 @@
 using UnityEngine;
 
-// This attribute adds a right-click → Create menu entry, so you can make
-// activity assets in the editor. THIS is the line that turns a class into
-// authorable content.
 [CreateAssetMenu(fileName = "NewActivity", menuName = "Office/Activity")]
 public class ActivityDefinition : ScriptableObject
 {
-    // Data fields — these show up as editable boxes in the Inspector.
     public string activityName;
     public int timeCost;
     public int energyCost;
     public StatType affects;
     public int amount;
-    
+
+    public CoworkerDefinition targetCoworker;   // only used when affects == CoworkerRelationship
+
+    // Affordability check on click. Reads energy + clock only, so Employee is fine here.
     public bool CanAfford(Employee e, int clock)
     {
         const int dayEnd = 1020;
-        if ((clock + timeCost) > dayEnd) return false;   // not enough time before 5pm
-        if ((e.energy - energyCost) < 0) return false;   // not enough energy
+        if ((clock + timeCost) > dayEnd) return false;
+        if ((e.energy - energyCost) < 0) return false;
         return true;
     }
-    
-    public void Apply(Employee e)
-    {
-        const int threshold = 30;
-        const float floor = 0.2f;
 
-        float multiplier;
-        if (e.energy >= threshold)
-            multiplier = 1f;
-        else
-            multiplier = floor + (1f - floor) * ((float)e.energy / threshold);
-
-        int gain = (int)(amount * multiplier);
-        if (affects == StatType.Career)
-            e.career += gain;
-        else
-            e.relationships += gain;
-
-        e.energy -= energyCost;
-        e.energy = Mathf.Clamp(e.energy, 0, 100);
-    }
-    
-    // Does ONE minute of this activity. Accumulators passed by ref so
-    // fractional progress carries between calls.
-    public void AdvanceOneMinute(Employee e, ref float energyAccumulator, ref float gainAccumulator)
+    // Does ONE minute of this activity. Takes GameState so it can reach both
+    // the employee AND the coworker relationships.
+    public void AdvanceOneMinute(GameState game, ref float energyAccumulator, ref float gainAccumulator)
     {
         // effectiveness from CURRENT energy
         const int threshold = 30;
         const float floor = 0.2f;
         float effectiveness;
-        if (e.energy >= threshold)
+        if (game.employee.energy >= threshold)
             effectiveness = 1f;
         else
-            effectiveness = floor + (1f - floor) * ((float)e.energy / threshold);
+            effectiveness = floor + (1f - floor) * ((float)game.employee.energy / threshold);
 
-        // ENERGY: add this minute's slice, then apply whole points 
+        // ENERGY: add this minute's slice, then apply whole points
         energyAccumulator += (float)energyCost / timeCost;
         while (energyAccumulator >= 1f)
         {
             energyAccumulator -= 1f;
-            e.energy -= 1;
+            game.employee.energy -= 1;
         }
         while (energyAccumulator <= -1f)   // coffee restoring
         {
             energyAccumulator += 1f;
-            e.energy += 1;
+            game.employee.energy += 1;
         }
-        e.energy = Mathf.Clamp(e.energy, 0, 100);
+        game.employee.energy = Mathf.Clamp(game.employee.energy, 0, 100);
 
-        // GAIN: add this minute's slice, then apply whole points 
+        // GAIN: add this minute's slice, then apply whole points
         gainAccumulator += ((float)amount / timeCost) * effectiveness;
         while (gainAccumulator >= 1f)
         {
             gainAccumulator -= 1f;
             if (affects == StatType.Career)
-                e.career += 1;
-            else
-                e.relationships += 1;
+            {
+                game.employee.career += 1;
+            }
+            else if (affects == StatType.CoworkerRelationship)
+            {
+                game.ChangeRelationship(targetCoworker, 1);   // one specific person
+            }
+            else // StatType.Relationships — the whole team
+            {
+                foreach (CoworkerDefinition c in game.relationships.Keys)
+                    game.ChangeRelationship(c, 1);
+            }
         }
     }
 }

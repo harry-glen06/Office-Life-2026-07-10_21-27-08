@@ -1,5 +1,6 @@
 public enum StatType
 {
     Career,
-    Relationships
+    Relationships,
+    CoworkerRelationship
 }
