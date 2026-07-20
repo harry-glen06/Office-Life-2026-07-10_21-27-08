@@ -1124,6 +1124,12 @@ MonoBehaviour:
     activity: {fileID: 11400000, guid: 65606a84dc89a493aa01348f26abd4ec, type: 2}
   statusText: {fileID: 230184887}
   secondsPerMinute: 0.1
+  coworkers:
+  - {fileID: 11400000, guid: 19ade172b90da43078339d23185a617e, type: 2}
+  - {fileID: 11400000, guid: ecb098f6540b64d6795448c76938c010, type: 2}
+  - {fileID: 11400000, guid: 4f127d60e7d254595ac87664cec39f2f, type: 2}
+  - {fileID: 11400000, guid: 061a7782f6d1e43c0b10d813beebd9a7, type: 2}
+  - {fileID: 11400000, guid: 04210332a055347f1a361b158f5296c3, type: 2}
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0

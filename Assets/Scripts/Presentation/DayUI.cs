@@ -24,10 +24,13 @@ public class DayUI : MonoBehaviour
     
     private GameState gameState;
     private DaySimulation simulation;
-
+    
+    [SerializeField] private List<CoworkerDefinition> coworkers;
+    
     void Start()
     {
         gameState = new GameState();
+        gameState.InitCoworkers(coworkers);
         simulation = new DaySimulation(gameState);
 
         foreach (ActivitySlot slot in slots)
