@@ -15,6 +15,9 @@ public class DayUI : MonoBehaviour
 
     [SerializeField] private List<ActivitySlot> slots;
     [SerializeField] private TextMeshProUGUI statusText;
+    
+    [SerializeField] private float secondsPerMinute = 1f;
+    
 
     private DaySimulation simulation;
     private float secondsAccumulator = 0f;
@@ -38,9 +41,9 @@ public class DayUI : MonoBehaviour
 
         // Presentation concern: convert real seconds into ticks.
         secondsAccumulator += Time.deltaTime;
-        if (secondsAccumulator >= 1f)
+        if (secondsAccumulator >= secondsPerMinute)  
         {
-            secondsAccumulator -= 1f;
+            secondsAccumulator -= secondsPerMinute;
             simulation.Tick();       // the CONSEQUENCE lives in the sim
             UpdateDisplay();
         }
