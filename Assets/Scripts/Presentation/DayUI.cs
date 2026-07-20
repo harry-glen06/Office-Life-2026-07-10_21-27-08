@@ -57,17 +57,28 @@ public class DayUI : MonoBehaviour
     {
         if (simulation.IsDayOver)
         {
-            statusText.text = "Day over — go home";
+            statusText.text = StatsLine() + "\nDay over, go home";
             foreach (ActivitySlot slot in slots)
                 slot.button.interactable = false;
             return;
         }
 
-        statusText.text =
-            $"Energy: {simulation.Energy}  Career: {simulation.Career}  " +
-            $"Rel: {simulation.Relationships}  Time: {FormatTime(simulation.Clock)}";
+        if (simulation.IsBusy)
+        {
+            statusText.text = StatsLine() + 
+                              $"\nCurrently: {simulation.CurrentActivityName} ({simulation.RemainingMinutes} min left)";
+            return;
+        }
+        
+        statusText.text = StatsLine();
     }
 
+    string StatsLine()          // ← moved here, sibling to FormatTime
+    {
+        return $"Energy: {simulation.Energy}  Career: {simulation.Career}  " +
+               $"Rel: {simulation.Relationships}  Time: {FormatTime(simulation.Clock)}";
+    }
+    
     // Pure display formatting — correctly a UI concern.
     string FormatTime(int minutes)
     {

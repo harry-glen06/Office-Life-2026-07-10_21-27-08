@@ -23,13 +23,28 @@ public class DaySimulation
     public int RemainingMinutes => remainingMinutes;
     
     public enum DayState { Idle, Busy }
+    
+    private float energyAccumulator = 0f;
+    private float gainAccumulator = 0f;
 
+    public string CurrentActivityName => currentActivity != null ? currentActivity.activityName : "";
 
+    
     // Player picked an activity. Returns true if it happened.
+    // Player clicked an activity. Tries to START it (doesn't finish it).
     public bool DoActivity(ActivityDefinition activity)
     {
         if (dayOver) return false;
-        return activity.Perform(employee, ref clock);
+        if (state == DayState.Busy) return false;        // already doing something
+        if (!activity.CanAfford(employee, clock)) return false;  // can't afford it
+
+        // Start the busy period. Effects apply later, on completion.
+        state = DayState.Busy;
+        currentActivity = activity;
+        remainingMinutes = activity.timeCost;
+        energyAccumulator = 0f;      // reset
+        gainAccumulator = 0f;        // reset
+        return true;
     }
 
     // Advance one in-game minute. UI calls this once per real second.
@@ -37,12 +52,26 @@ public class DaySimulation
     {
         if (dayOver) return;
 
-        if (clock >= DayEnd)   // reached 5pm — end the day
+        if (clock >= DayEnd)
         {
             dayOver = true;
             return;
         }
 
         clock += 1;
+
+        if (state == DayState.Busy)
+        {
+            // do one minute's worth of drain + gain
+            currentActivity.AdvanceOneMinute(employee, ref energyAccumulator, ref gainAccumulator);
+
+            remainingMinutes -= 1;
+            if (remainingMinutes <= 0)
+            {
+                // activity finished — just return to idle (effects already applied gradually)
+                state = DayState.Idle;
+                currentActivity = null;
+            }
+        }
     }
 }
