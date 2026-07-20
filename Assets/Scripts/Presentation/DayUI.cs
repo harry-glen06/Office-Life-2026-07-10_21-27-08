@@ -15,16 +15,18 @@ public class DayUI : MonoBehaviour
 
     [SerializeField] private List<ActivitySlot> slots;
     [SerializeField] private TextMeshProUGUI statusText;
-    
-    [SerializeField] private float secondsPerMinute = 1f;
-    
 
-    private DaySimulation simulation;
+    [SerializeField] private float secondsPerMinute = 0.1f; // game speed
+    
     private float secondsAccumulator = 0f;
+    
+    private GameState gameState;
+    private DaySimulation simulation;
 
     void Start()
     {
-        simulation = new DaySimulation();
+        gameState = new GameState();
+        simulation = new DaySimulation(gameState);
 
         foreach (ActivitySlot slot in slots)
         {

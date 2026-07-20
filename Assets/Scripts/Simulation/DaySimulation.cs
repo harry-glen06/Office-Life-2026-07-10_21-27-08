@@ -1,53 +1,54 @@
-// The day's LOGIC. Knows nothing about the screen.
 public class DaySimulation
 {
     private const int DayStart = 540;   // 9am
     private const int DayEnd = 1020;    // 5pm
 
-    private Employee employee = new Employee();
+    private GameState game;              // holds the persistent employee + day counter
     private int clock = DayStart;
     private bool dayOver = false;
-    
-    private DayState state = DayState.Idle;      // start idle
-    private ActivityDefinition currentActivity;  // what we're doing (null when idle)
-    private int remainingMinutes;                // countdown until it finishes
-    
-    // Read-only windows for the UI to DISPLAY (it can look, not touch).
-    public int Energy => employee.energy;
-    public int Career => employee.career;
-    public int Relationships => employee.relationships;
-    public int Clock => clock;
-    public bool IsDayOver => dayOver;
-    
-    public bool IsBusy => state == DayState.Busy;
-    public int RemainingMinutes => remainingMinutes;
-    
-    public enum DayState { Idle, Busy }
-    
+
+    private DayState state = DayState.Idle;
+    private ActivityDefinition currentActivity;
+    private int remainingMinutes;
+
     private float energyAccumulator = 0f;
     private float gainAccumulator = 0f;
 
+    public enum DayState { Idle, Busy }
+
+    // Constructor: receives the persistent game state.
+    public DaySimulation(GameState game)
+    {
+        this.game = game;
+    }
+
+    // Read-only windows for the UI to DISPLAY.
+    public int Energy => game.employee.energy;
+    public int Career => game.employee.career;
+    public int Relationships => game.employee.relationships;
+    public int Clock => clock;
+    public bool IsDayOver => dayOver;
+
+    public bool IsBusy => state == DayState.Busy;
+    public int RemainingMinutes => remainingMinutes;
     public string CurrentActivityName => currentActivity != null ? currentActivity.activityName : "";
 
-    
-    // Player picked an activity. Returns true if it happened.
-    // Player clicked an activity. Tries to START it (doesn't finish it).
+    // Player clicked an activity. Tries to START it.
     public bool DoActivity(ActivityDefinition activity)
     {
         if (dayOver) return false;
-        if (state == DayState.Busy) return false;        // already doing something
-        if (!activity.CanAfford(employee, clock)) return false;  // can't afford it
+        if (state == DayState.Busy) return false;
+        if (!activity.CanAfford(game.employee, clock)) return false;
 
-        // Start the busy period. Effects apply later, on completion.
         state = DayState.Busy;
         currentActivity = activity;
         remainingMinutes = activity.timeCost;
-        energyAccumulator = 0f;      // reset
-        gainAccumulator = 0f;        // reset
+        energyAccumulator = 0f;
+        gainAccumulator = 0f;
         return true;
     }
 
-    // Advance one in-game minute. UI calls this once per real second.
+    // Advance one in-game minute.
     public void Tick()
     {
         if (dayOver) return;
@@ -62,13 +63,11 @@ public class DaySimulation
 
         if (state == DayState.Busy)
         {
-            // do one minute's worth of drain + gain
-            currentActivity.AdvanceOneMinute(employee, ref energyAccumulator, ref gainAccumulator);
+            currentActivity.AdvanceOneMinute(game.employee, ref energyAccumulator, ref gainAccumulator);
 
             remainingMinutes -= 1;
             if (remainingMinutes <= 0)
             {
-                // activity finished — just return to idle (effects already applied gradually)
                 state = DayState.Idle;
                 currentActivity = null;
             }
