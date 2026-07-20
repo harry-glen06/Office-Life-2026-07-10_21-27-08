@@ -13,7 +13,11 @@ public class DayUI : MonoBehaviour
         public ActivityDefinition activity;
     }
     
+    [SerializeField] private GameObject coworkerButtonPrefab;   // the prefab to clone
+    [SerializeField] private GameObject coworkerPanel; 
+    
     [SerializeField] private Button goHomeButton;
+    [SerializeField] private Button socialiseButton;
     
     [SerializeField] private List<ActivitySlot> slots;
     [SerializeField] private TextMeshProUGUI statusText;
@@ -41,6 +45,11 @@ public class DayUI : MonoBehaviour
         
         goHomeButton.onClick.AddListener(OnGoHomeClicked);
         goHomeButton.gameObject.SetActive(false);
+        
+        socialiseButton.onClick.AddListener(OnSocialiseClicked);  
+        
+        BuildCoworkerButtons();
+        coworkerPanel.SetActive(false); 
 
         UpdateDisplay();
     }
@@ -73,7 +82,8 @@ public class DayUI : MonoBehaviour
 
         foreach (ActivitySlot slot in slots)
             slot.button.interactable = true;
-
+        socialiseButton.interactable = true; 
+        
         goHomeButton.gameObject.SetActive(false);
         UpdateDisplay();
     }
@@ -86,6 +96,7 @@ public class DayUI : MonoBehaviour
             statusText.text = StatsLine() + "\nDay over, go home";
             foreach (ActivitySlot slot in slots)
                 slot.button.interactable = false;
+            socialiseButton.interactable = false;
             goHomeButton.gameObject.SetActive(true);
             return;
         }
@@ -116,5 +127,33 @@ public class DayUI : MonoBehaviour
         if (hours == 0) displayHours = 12;
         string suffix = hours < 12 ? "AM" : "PM";
         return $"{displayHours}:{mins.ToString("D2")} {suffix}";
+    }
+    
+    void BuildCoworkerButtons()
+    {
+        foreach (CoworkerDefinition coworker in coworkers)
+        {
+            // Clone the prefab, put it inside the panel
+            GameObject buttonObj = Instantiate(coworkerButtonPrefab, coworkerPanel.transform);
+            // Set its label to the coworker's name
+            buttonObj.GetComponentInChildren<TextMeshProUGUI>().text = coworker.coworkerName;
+
+            // Wire its click to talk to THIS coworker
+            Button btn = buttonObj.GetComponent<Button>();
+            CoworkerDefinition c = coworker;   // capture into local — the closure trap again!
+            btn.onClick.AddListener(() => OnCoworkerClicked(c));
+        }
+    }
+
+    void OnCoworkerClicked(CoworkerDefinition coworker)
+    {
+        simulation.DoActivity(coworker.talkActivity);
+        coworkerPanel.SetActive(false);
+        UpdateDisplay();
+    }
+    
+    void OnSocialiseClicked()         
+    {
+        coworkerPanel.SetActive(true);
     }
 }

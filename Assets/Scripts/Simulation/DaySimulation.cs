@@ -36,6 +36,7 @@ public class DaySimulation
     // Player clicked an activity. Tries to START it.
     public bool DoActivity(ActivityDefinition activity)
     {
+        if (activity == null) return false;   // ← guard: no activity, do nothing
         if (dayOver) return false;
         if (state == DayState.Busy) return false;
         if (!activity.CanAfford(game.employee, clock)) return false;

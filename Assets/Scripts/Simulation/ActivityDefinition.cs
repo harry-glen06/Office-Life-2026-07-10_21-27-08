@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "NewActivity", menuName = "Office/Activity")]
@@ -62,7 +63,8 @@ public class ActivityDefinition : ScriptableObject
             }
             else // StatType.Relationships — the whole team
             {
-                foreach (CoworkerDefinition c in game.relationships.Keys)
+                List<CoworkerDefinition> keys = new List<CoworkerDefinition>(game.relationships.Keys);
+                foreach (CoworkerDefinition c in keys)
                     game.ChangeRelationship(c, 1);
             }
         }

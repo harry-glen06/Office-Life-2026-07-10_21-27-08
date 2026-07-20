@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5e29ee42a94a4055b12753fde7f583a, type: 3}
   m_Name: TalkHR
   m_EditorClassIdentifier: Assembly-CSharp::ActivityDefinition
-  activityName: Talk to HR
+  activityName: Talking to HR
   timeCost: 40
   energyCost: 18
   affects: 2

@@ -18,3 +18,4 @@ MonoBehaviour:
   relationshipGain: 1
   careerBonus: 0
   talkDuration: 45
+  talkActivity: {fileID: 11400000, guid: a221d9e0784014275b2808c8ca60473e, type: 2}

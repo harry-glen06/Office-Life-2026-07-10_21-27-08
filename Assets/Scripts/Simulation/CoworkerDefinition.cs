@@ -10,4 +10,6 @@ public class CoworkerDefinition : ScriptableObject
     public int relationshipGain;       // how much a talk raises their relationship (rival low)
     public int careerBonus;            // boss > 0, others 0 — talking nudges career
     public int talkDuration;           // minutes a talk takes (boss shorter)
+    
+    public ActivityDefinition talkActivity;   // the "talk to this person" activity
 }

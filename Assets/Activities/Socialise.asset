@@ -12,8 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5e29ee42a94a4055b12753fde7f583a, type: 3}
   m_Name: Socialise
   m_EditorClassIdentifier: Assembly-CSharp::ActivityDefinition
-  activityName: Socialise
+  activityName: Socialising
   timeCost: 60
   energyCost: 30
   affects: 1
   amount: 3
+  targetCoworker: {fileID: 0}
