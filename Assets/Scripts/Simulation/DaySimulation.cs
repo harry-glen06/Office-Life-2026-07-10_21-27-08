@@ -74,4 +74,10 @@ public class DaySimulation
             }
         }
     }
+    
+    public bool CanAfford(ActivityDefinition activity)
+    {
+        if (activity == null) return false;
+        return activity.CanAfford(game.employee, clock);
+    }
 }

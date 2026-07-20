@@ -110,6 +110,9 @@ public class DayUI : MonoBehaviour
             return;
         }
         
+        foreach (ActivitySlot slot in slots)
+            slot.button.interactable = simulation.CanAfford(slot.activity);
+        
         statusText.text = StatsLine();
     }
 
