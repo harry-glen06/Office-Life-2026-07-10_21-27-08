@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Accountant
   m_EditorClassIdentifier: Assembly-CSharp::CoworkerDefinition
   coworkerName: Accoutntant
-  startingRelationship: 15
+  startingRelationship: 11
   energyCost: 16
-  relationshipGain: 17
+  relationshipGain: 2
   careerBonus: 0
   talkDuration: 45

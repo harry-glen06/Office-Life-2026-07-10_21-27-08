@@ -15,6 +15,6 @@ MonoBehaviour:
   coworkerName: HR
   startingRelationship: 9
   energyCost: 18
-  relationshipGain: 3
+  relationshipGain: 2
   careerBonus: 0
   talkDuration: 40
