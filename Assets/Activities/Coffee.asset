@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ActivityDefinition
   activityName: Drinking coffee
   timeCost: 5
-  energyCost: -15
+  energyCost: -20
   affects: 0
   amount: 0
   targetCoworker: {fileID: 0}

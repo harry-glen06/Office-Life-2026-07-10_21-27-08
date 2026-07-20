@@ -13,6 +13,16 @@ public class GameState
     // How sleep works: recover some of the gap toward full.
     public void RecoverOvernight()
     {
+        // Did a weekend just pass? (we're now arriving at a Monday, past day 1)
+        bool weekendJustHappened = (dayNumber > 1) && (DayName() == "Monday");
+
+        if (weekendJustHappened)
+        {
+            employee.energy = 100;   // full weekend recharge
+            return;
+        }
+        
+        //Otherwise: normal partial overnight recovery
         const float recoveryFraction = 0.75f;   // half the gap to full
 
         int recovered = Mathf.RoundToInt((100 - employee.energy) * recoveryFraction);
@@ -42,5 +52,16 @@ public class GameState
         foreach (int value in relationships.Values)
             total += value;
         return total;   // or return total/relationships.Count for an average
+    }
+    
+    public string DayName()
+    {
+        string[] days = { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday" };
+        return days[(dayNumber - 1) % 5];
+    }
+    
+    public int WeekNumber()
+    {
+        return (dayNumber - 1) / 5 + 1;
     }
 }

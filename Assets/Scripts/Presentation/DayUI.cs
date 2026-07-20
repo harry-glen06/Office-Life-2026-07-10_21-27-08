@@ -15,6 +15,7 @@ public class DayUI : MonoBehaviour
     
     [SerializeField] private GameObject coworkerButtonPrefab;   // the prefab to clone
     [SerializeField] private GameObject coworkerPanel; 
+    [SerializeField] private Button cancelButton;
     
     [SerializeField] private Button goHomeButton;
     [SerializeField] private Button socialiseButton;
@@ -44,6 +45,7 @@ public class DayUI : MonoBehaviour
         }
         
         goHomeButton.onClick.AddListener(OnGoHomeClicked);
+        cancelButton.onClick.AddListener(OnCancelClicked);
         goHomeButton.gameObject.SetActive(false);
         
         socialiseButton.onClick.AddListener(OnSocialiseClicked);  
@@ -113,7 +115,7 @@ public class DayUI : MonoBehaviour
 
     string StatsLine()         
     {
-        return $"Day: {gameState.dayNumber} Energy: {simulation.Energy}  Career: {simulation.Career}  " +
+        return $"{gameState.DayName()}, Week {gameState.WeekNumber()}/26 Energy: {simulation.Energy}  Career: {simulation.Career}  " +
                $"Rel: {simulation.Relationships}  Time: {FormatTime(simulation.Clock)}";
     }
     
@@ -143,6 +145,8 @@ public class DayUI : MonoBehaviour
             CoworkerDefinition c = coworker;   // capture into local — the closure trap again!
             btn.onClick.AddListener(() => OnCoworkerClicked(c));
         }
+        cancelButton.transform.SetAsLastSibling();
+        
     }
 
     void OnCoworkerClicked(CoworkerDefinition coworker)
@@ -155,5 +159,10 @@ public class DayUI : MonoBehaviour
     void OnSocialiseClicked()         
     {
         coworkerPanel.SetActive(true);
+    }
+    
+    void OnCancelClicked()
+    {
+        coworkerPanel.SetActive(false);
     }
 }
