@@ -12,11 +12,13 @@ public class DayUI : MonoBehaviour
         public Button button;
         public ActivityDefinition activity;
     }
-
+    
+    [SerializeField] private Button goHomeButton;
+    
     [SerializeField] private List<ActivitySlot> slots;
     [SerializeField] private TextMeshProUGUI statusText;
 
-    [SerializeField] private float secondsPerMinute = 0.1f; // game speed
+    [SerializeField] private float secondsPerMinute = 1f; // game speed
     
     private float secondsAccumulator = 0f;
     
@@ -33,6 +35,9 @@ public class DayUI : MonoBehaviour
             ActivityDefinition activity = slot.activity;
             slot.button.onClick.AddListener(() => OnActivityClicked(activity));
         }
+        
+        goHomeButton.onClick.AddListener(OnGoHomeClicked);
+        goHomeButton.gameObject.SetActive(false);
 
         UpdateDisplay();
     }
@@ -56,6 +61,19 @@ public class DayUI : MonoBehaviour
         simulation.DoActivity(activity);
         UpdateDisplay();
     }
+    
+    void OnGoHomeClicked()         
+    {
+        gameState.dayNumber++;
+        gameState.RecoverOvernight(); 
+        simulation = new DaySimulation(gameState);
+
+        foreach (ActivitySlot slot in slots)
+            slot.button.interactable = true;
+
+        goHomeButton.gameObject.SetActive(false);
+        UpdateDisplay();
+    }
 
     // Reads the sim's state and draws it. No logic, just display.
     void UpdateDisplay()
@@ -65,6 +83,7 @@ public class DayUI : MonoBehaviour
             statusText.text = StatsLine() + "\nDay over, go home";
             foreach (ActivitySlot slot in slots)
                 slot.button.interactable = false;
+            goHomeButton.gameObject.SetActive(true);
             return;
         }
 
@@ -78,9 +97,9 @@ public class DayUI : MonoBehaviour
         statusText.text = StatsLine();
     }
 
-    string StatsLine()          // ← moved here, sibling to FormatTime
+    string StatsLine()         
     {
-        return $"Energy: {simulation.Energy}  Career: {simulation.Career}  " +
+        return $"Day: {gameState.dayNumber} Energy: {simulation.Energy}  Career: {simulation.Career}  " +
                $"Rel: {simulation.Relationships}  Time: {FormatTime(simulation.Clock)}";
     }
     
