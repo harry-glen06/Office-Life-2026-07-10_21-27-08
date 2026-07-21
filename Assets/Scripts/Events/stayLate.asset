@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc484765d5d9946c0bb071943efa4cd4, type: 3}
+  m_Name: stayLate
+  m_EditorClassIdentifier: Assembly-CSharp::EventDefinition
+  title: Stay Late?
+  description: Your boss asks if you can stay late to finish a project
+  choices:
+  - label: Accept
+    effects:
+    - affects: 0
+      targetCoworker: {fileID: 0}
+      amount: 5
+    - affects: 2
+      targetCoworker: {fileID: 11400000, guid: 19ade172b90da43078339d23185a617e, type: 2}
+      amount: 3
+    - affects: 3
+      targetCoworker: {fileID: 0}
+      amount: -20
+  - label: Decline
+    effects:
+    - affects: 0
+      targetCoworker: {fileID: 0}
+      amount: -3
+    - affects: 3
+      targetCoworker: {fileID: 0}
+      amount: 8

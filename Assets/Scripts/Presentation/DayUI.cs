@@ -30,6 +30,14 @@ public class DayUI : MonoBehaviour
 
     [SerializeField] private float secondsPerMinute = 1f; // game speed
     
+    [SerializeField] private GameObject eventBackdrop;
+    [SerializeField] private TextMeshProUGUI eventText;
+    [SerializeField] private Transform choiceContainer;
+    [SerializeField] private GameObject choiceButtonPrefab;   
+    [SerializeField] private EventDefinition testEvent;        // drag Stay Late in, for testing
+    
+    [SerializeField] private Button testEventButton;
+    
     private float secondsAccumulator = 0f;
     private bool isPaused = false;
     
@@ -64,6 +72,8 @@ public class DayUI : MonoBehaviour
         superButton.onClick.AddListener(OnSuperClicked);
         UpdateSpeedButtons(playButton);
         
+        testEventButton.onClick.AddListener(() => ShowEvent(testEvent));
+        
         BuildCoworkerButtons();
         RefreshCoworkerButtons();
         coworkerPanel.SetActive(false); 
@@ -75,7 +85,7 @@ public class DayUI : MonoBehaviour
     {
         if (simulation.IsDayOver) return;
         if (isPaused) return; 
-
+        
         // Presentation concern: convert real seconds into ticks.
         secondsAccumulator += Time.deltaTime;
         if (secondsAccumulator >= secondsPerMinute)  
@@ -84,6 +94,7 @@ public class DayUI : MonoBehaviour
             simulation.Tick();       // the CONSEQUENCE lives in the sim
             UpdateDisplay();
         }
+        
     }
 
     void OnActivityClicked(ActivityDefinition activity)
@@ -220,4 +231,56 @@ public class DayUI : MonoBehaviour
         else
             active.GetComponent<Image>().color = Color.green;
     }
+    
+    void ShowEvent(EventDefinition ev)
+    {
+        isPaused = true;
+        eventBackdrop.SetActive(true);
+        eventText.text = ev.title + "\n\n" + ev.description;
+
+        // clear old choice buttons (events have different choices)
+        foreach (Transform child in choiceContainer)
+            Destroy(child.gameObject);
+
+        // one button per choice
+        foreach (EventChoice choice in ev.choices)
+        {
+            GameObject btnObj = Instantiate(choiceButtonPrefab, choiceContainer);
+            btnObj.GetComponentInChildren<TextMeshProUGUI>().text = choice.label;
+
+            EventChoice c = choice;   // closure capture
+            btnObj.GetComponent<Button>().onClick.AddListener(() => OnChoicePicked(c));
+        }
+    }
+    
+    void OnChoicePicked(EventChoice choice)
+    {
+        foreach (Effect effect in choice.effects)
+        {
+            if (effect.affects == StatType.Career)
+            {
+                gameState.employee.career += effect.amount;
+            }
+            else if (effect.affects == StatType.Energy)
+            {
+                gameState.employee.energy += effect.amount;
+                gameState.employee.energy = Mathf.Clamp(gameState.employee.energy, 0, 100);
+            }
+            else if (effect.affects == StatType.CoworkerRelationship)
+            {
+                gameState.ChangeRelationship(effect.targetCoworker, effect.amount);
+            }
+            else // Relationships — everyone
+            {
+                List<CoworkerDefinition> keys = new List<CoworkerDefinition>(gameState.relationships.Keys);
+                foreach (CoworkerDefinition c in keys)
+                    gameState.ChangeRelationship(c, effect.amount);
+            }
+        }
+
+        eventBackdrop.SetActive(false);
+        isPaused = false;
+        UpdateDisplay();
+    }
+    
 }
