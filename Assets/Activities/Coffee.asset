@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Coffee
   m_EditorClassIdentifier: Assembly-CSharp::ActivityDefinition
   activityName: Drinking coffee
-  timeCost: 5
+  timeCost: 15
   energyCost: -20
   affects: 0
   amount: 0

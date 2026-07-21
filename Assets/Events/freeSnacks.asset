@@ -10,27 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cc484765d5d9946c0bb071943efa4cd4, type: 3}
-  m_Name: stayLate
+  m_Name: freeSnacks
   m_EditorClassIdentifier: Assembly-CSharp::EventDefinition
-  title: Stay Late?
-  description: Your boss asks if you can stay late to finish a project
+  title: Free Snacks!
+  description: 'Corpate decided to send down everyone some free donuts '
   choices:
-  - label: Accept
+  - label: Okay!
     effects:
-    - affects: 0
+    - affects: 1
+      targetCoworker: {fileID: 0}
+      amount: 1
+    - affects: 3
       targetCoworker: {fileID: 0}
       amount: 5
-    - affects: 2
-      targetCoworker: {fileID: 11400000, guid: 19ade172b90da43078339d23185a617e, type: 2}
-      amount: 3
-    - affects: 3
-      targetCoworker: {fileID: 0}
-      amount: -20
-  - label: Decline
-    effects:
-    - affects: 0
-      targetCoworker: {fileID: 0}
-      amount: -3
-    - affects: 3
-      targetCoworker: {fileID: 0}
-      amount: 8
+  requiredDay: 0
+  requiredTime: 0
+  chance: 0.1

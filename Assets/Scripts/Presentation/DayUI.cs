@@ -34,9 +34,6 @@ public class DayUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI eventText;
     [SerializeField] private Transform choiceContainer;
     [SerializeField] private GameObject choiceButtonPrefab;   
-    [SerializeField] private EventDefinition testEvent;        // drag Stay Late in, for testing
-    
-    [SerializeField] private Button testEventButton;
     
     private float secondsAccumulator = 0f;
     private bool isPaused = false;
@@ -75,8 +72,6 @@ public class DayUI : MonoBehaviour
         fastButton.onClick.AddListener(OnFastClicked);
         superButton.onClick.AddListener(OnSuperClicked);
         UpdateSpeedButtons(playButton);
-        
-        testEventButton.onClick.AddListener(() => ShowEvent(testEvent));
         
         BuildCoworkerButtons();
         RefreshCoworkerButtons();
