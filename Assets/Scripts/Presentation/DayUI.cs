@@ -20,17 +20,25 @@ public class DayUI : MonoBehaviour
     [SerializeField] private Button goHomeButton;
     [SerializeField] private Button socialiseButton;
     
+    [SerializeField] private Button pauseButton;
+    [SerializeField] private Button playButton;
+    [SerializeField] private Button fastButton;
+    [SerializeField] private Button superButton;
+    
     [SerializeField] private List<ActivitySlot> slots;
     [SerializeField] private TextMeshProUGUI statusText;
 
     [SerializeField] private float secondsPerMinute = 1f; // game speed
     
     private float secondsAccumulator = 0f;
+    private bool isPaused = false;
     
     private GameState gameState;
     private DaySimulation simulation;
     
     [SerializeField] private List<CoworkerDefinition> coworkers;
+    
+    private Dictionary<CoworkerDefinition, Button> coworkerButtons = new Dictionary<CoworkerDefinition, Button>();
     
     void Start()
     {
@@ -50,7 +58,14 @@ public class DayUI : MonoBehaviour
         
         socialiseButton.onClick.AddListener(OnSocialiseClicked);  
         
+        pauseButton.onClick.AddListener(OnPauseClicked);
+        playButton.onClick.AddListener(OnPlayClicked);
+        fastButton.onClick.AddListener(OnFastClicked);
+        superButton.onClick.AddListener(OnSuperClicked);
+        UpdateSpeedButtons(playButton);
+        
         BuildCoworkerButtons();
+        RefreshCoworkerButtons();
         coworkerPanel.SetActive(false); 
 
         UpdateDisplay();
@@ -59,6 +74,7 @@ public class DayUI : MonoBehaviour
     void Update()
     {
         if (simulation.IsDayOver) return;
+        if (isPaused) return; 
 
         // Presentation concern: convert real seconds into ticks.
         secondsAccumulator += Time.deltaTime;
@@ -118,7 +134,7 @@ public class DayUI : MonoBehaviour
 
     string StatsLine()         
     {
-        return $"{gameState.DayName()}, Week {gameState.WeekNumber()}/26 Energy: {simulation.Energy}  Career: {simulation.Career}  " +
+        return $"{gameState.DayName()}, Week {gameState.WeekNumber()}/26 \nEnergy: {simulation.Energy}  Career: {simulation.Career}  " +
                $"Rel: {simulation.Relationships}  Time: {FormatTime(simulation.Clock)}";
     }
     
@@ -138,34 +154,70 @@ public class DayUI : MonoBehaviour
     {
         foreach (CoworkerDefinition coworker in coworkers)
         {
-            // Clone the prefab, put it inside the panel
             GameObject buttonObj = Instantiate(coworkerButtonPrefab, coworkerPanel.transform);
-            // Set its label to the coworker's name
-            buttonObj.GetComponentInChildren<TextMeshProUGUI>().text = coworker.coworkerName;
 
-            // Wire its click to talk to THIS coworker
             Button btn = buttonObj.GetComponent<Button>();
-            CoworkerDefinition c = coworker;   // capture into local — the closure trap again!
+            coworkerButtons[coworker] = btn;        // remember it
+
+            CoworkerDefinition c = coworker;
             btn.onClick.AddListener(() => OnCoworkerClicked(c));
         }
+
         cancelButton.transform.SetAsLastSibling();
-        
+    }
+    
+    void RefreshCoworkerButtons()
+    {
+        foreach (var pair in coworkerButtons)
+        {
+            CoworkerDefinition coworker = pair.Key;
+            Button button = pair.Value;
+
+            button.GetComponentInChildren<TextMeshProUGUI>().text =
+                $"{coworker.coworkerName} ({gameState.GetRelationship(coworker)})";
+
+            button.interactable = simulation.CanAfford(coworker.talkActivity);
+        }
     }
 
     void OnCoworkerClicked(CoworkerDefinition coworker)
     {
         simulation.DoActivity(coworker.talkActivity);
         coworkerPanel.SetActive(false);
+        isPaused = false;  
         UpdateDisplay();
     }
     
     void OnSocialiseClicked()         
     {
+        RefreshCoworkerButtons();  
         coworkerPanel.SetActive(true);
+        isPaused = true; 
     }
     
     void OnCancelClicked()
     {
         coworkerPanel.SetActive(false);
+        isPaused = false;
+    }
+    
+    void OnPauseClicked()  { isPaused = true; UpdateSpeedButtons(pauseButton);}
+    void OnPlayClicked()   { isPaused = false; secondsPerMinute = 1f; UpdateSpeedButtons(playButton);}
+    void OnFastClicked()   { isPaused = false; secondsPerMinute = 0.3f; UpdateSpeedButtons(fastButton);}
+    void OnSuperClicked()  { isPaused = false; secondsPerMinute = 0.05f; UpdateSpeedButtons(superButton);}
+    
+    void UpdateSpeedButtons(Button active)
+    {
+        // reset all to normal (unhighlighted)
+        pauseButton.GetComponent<Image>().color = Color.white;
+        playButton.GetComponent<Image>().color = Color.white;
+        fastButton.GetComponent<Image>().color = Color.white;
+        superButton.GetComponent<Image>().color = Color.white;
+
+        // highlight the active one in its own color
+        if (active == pauseButton)
+            active.GetComponent<Image>().color = Color.red;
+        else
+            active.GetComponent<Image>().color = Color.green;
     }
 }
