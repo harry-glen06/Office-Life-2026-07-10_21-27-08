@@ -10,19 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cc484765d5d9946c0bb071943efa4cd4, type: 3}
-  m_Name: helpReceptionist
+  m_Name: teamLunch
   m_EditorClassIdentifier: Assembly-CSharp::EventDefinition
-  title: help receptionist
-  description: 'The receptionist asks for your help, and you can''t say no  '
+  title: Team Lunch
+  description: The boss takes everyone out ofr team lunch
   choices:
   - label: Okay!
     effects:
-    - affects: 0
-      targetCoworker: {fileID: 11400000, guid: 04210332a055347f1a361b158f5296c3, type: 2}
-      amount: 3
     - affects: 3
       targetCoworker: {fileID: 0}
-      amount: 5
-  requiredDay: 0
+      amount: -40
+    - affects: 1
+      targetCoworker: {fileID: 0}
+      amount: 3
+  requiredDay: 5
   requiredTime: 0
-  chance: 0.1
+  chance: 0.15
