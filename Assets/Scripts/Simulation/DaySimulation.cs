@@ -1,7 +1,18 @@
+using UnityEngine;
+using System.Collections.Generic;  
+
 public class DaySimulation
 {
     private const int DayStart = 540;   // 9am
     private const int DayEnd = 1020;    // 5pm
+    
+    private const int MorningStart = 540;    // 9am
+    private const int MorningEnd = 720;      // 12pm
+    private const int AfternoonEnd = 1020;   // 5pm
+    
+    private EventDefinition scheduledEvent;
+    private int scheduledTime;
+    private bool eventFiredToday;
 
     private GameState game;              // holds the persistent employee + day counter
     private int clock = DayStart;
@@ -61,6 +72,13 @@ public class DaySimulation
         }
 
         clock += 1;
+        
+        // event firing check
+        if (scheduledEvent != null && !eventFiredToday && clock >= scheduledTime)
+        {
+            eventFiredToday = true;      // mark fired so it doesn't retrigger
+            pendingEvent = scheduledEvent;   // signal to the UI
+        }
 
         if (state == DayState.Busy)
         {
@@ -80,4 +98,54 @@ public class DaySimulation
         if (activity == null) return false;
         return activity.CanAfford(game.employee, clock);
     }
+    
+    int RandomTimeInWindow(TimeRequirement window)
+    {
+        // Random.Range(min, max) for ints returns min..max-1 (max exclusive)
+        if (window == TimeRequirement.Morning)
+            return Random.Range(MorningStart, MorningEnd);
+        else if (window == TimeRequirement.Afternoon)
+            return Random.Range(MorningEnd, AfternoonEnd);
+        else // Any
+            return Random.Range(MorningStart, AfternoonEnd);
+    }
+    
+    bool IsEligibleToday(EventDefinition ev)
+    {
+        if (ev.requiredDay == DayRequirement.Any)
+            return true;
+
+        // does the event's required day match today?
+        // DayName() returns "Monday".."Friday"; compare to the enum
+        return ev.requiredDay.ToString() == game.DayName();
+    }
+    
+    public void ScheduleEventForDay(List<EventDefinition> allEvents)
+    {
+        scheduledEvent = null;          // reset
+        eventFiredToday = false;
+
+        foreach (EventDefinition ev in allEvents)
+        {
+            if (!IsEligibleToday(ev)) continue;          // wrong day, skip
+
+            if (Random.value <= ev.chance)               // roll its per-day chance
+            {
+                scheduledEvent = ev;
+                scheduledTime = RandomTimeInWindow(ev.requiredTime);
+                break;   // one per day — take the first winner
+            }
+        }
+    }
+    
+    private EventDefinition pendingEvent;   // an event waiting to be displayed
+
+// DayUI calls this each frame; returns the pending event (and clears it), or null
+    public EventDefinition ConsumePendingEvent()
+    {
+        EventDefinition ev = pendingEvent;
+        pendingEvent = null;
+        return ev;
+    }
+    
 }

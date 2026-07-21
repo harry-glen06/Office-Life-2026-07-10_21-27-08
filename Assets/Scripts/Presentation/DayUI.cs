@@ -44,6 +44,8 @@ public class DayUI : MonoBehaviour
     private GameState gameState;
     private DaySimulation simulation;
     
+    [SerializeField] private List<EventDefinition> allEvents;
+    
     [SerializeField] private List<CoworkerDefinition> coworkers;
     
     private Dictionary<CoworkerDefinition, Button> coworkerButtons = new Dictionary<CoworkerDefinition, Button>();
@@ -53,7 +55,9 @@ public class DayUI : MonoBehaviour
         gameState = new GameState();
         gameState.InitCoworkers(coworkers);
         simulation = new DaySimulation(gameState);
-
+        
+        simulation.ScheduleEventForDay(allEvents);
+        
         foreach (ActivitySlot slot in slots)
         {
             ActivityDefinition activity = slot.activity;
@@ -92,6 +96,12 @@ public class DayUI : MonoBehaviour
         {
             secondsAccumulator -= secondsPerMinute;
             simulation.Tick();       // the CONSEQUENCE lives in the sim
+            
+            // check if the tick scheduled an event to show
+            EventDefinition ev = simulation.ConsumePendingEvent();
+            if (ev != null)
+                ShowEvent(ev);
+            
             UpdateDisplay();
         }
         
@@ -108,6 +118,7 @@ public class DayUI : MonoBehaviour
         gameState.dayNumber++;
         gameState.RecoverOvernight(); 
         simulation = new DaySimulation(gameState);
+        simulation.ScheduleEventForDay(allEvents);
 
         foreach (ActivitySlot slot in slots)
             slot.button.interactable = true;
