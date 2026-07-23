@@ -25,6 +25,7 @@ public class DaySimulation
     private float energyAccumulator = 0f;
     private float gainAccumulator = 0f;
     private float toiletAccumulator = 0f;
+    private float activityToiletAccumulator = 0f; 
     
     private EventDefinition accidentEvent;
 
@@ -47,6 +48,8 @@ public class DaySimulation
     public int RemainingMinutes => remainingMinutes;
     public string CurrentActivityName => currentActivity != null ? currentActivity.activityName : "";
     
+    public int AverageRelationship => game.AverageLikability();
+    
     public int toilet => game.employee.toilet;
     private const float ToiletDrainPerMinute = 0.3f; 
 
@@ -63,6 +66,7 @@ public class DaySimulation
         remainingMinutes = activity.timeCost;
         energyAccumulator = 0f;
         gainAccumulator = 0f;
+        activityToiletAccumulator = 0f;
         return true;
     }
 
@@ -102,7 +106,7 @@ public class DaySimulation
 
         if (state == DayState.Busy)
         {
-            currentActivity.AdvanceOneMinute(game, ref energyAccumulator, ref gainAccumulator, ref toiletAccumulator);
+            currentActivity.AdvanceOneMinute(game, ref energyAccumulator, ref gainAccumulator, ref activityToiletAccumulator);
 
             remainingMinutes -= 1;
             if (remainingMinutes <= 0)

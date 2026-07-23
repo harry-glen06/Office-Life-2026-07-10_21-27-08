@@ -12,168 +12,176 @@ public class DayUI : MonoBehaviour
         public Button button;
         public ActivityDefinition activity;
     }
-    
-    [SerializeField] private GameObject coworkerButtonPrefab;   // the prefab to clone
-    [SerializeField] private GameObject coworkerPanel; 
-    [SerializeField] private Button cancelButton;
-    
-    [SerializeField] private Button goHomeButton;
+
+    // ---------- Data (authored assets) ----------
+    [Header("Data")]
+    [SerializeField] private List<CoworkerDefinition> coworkers;
+    [SerializeField] private List<EventDefinition> allEvents;
+    [SerializeField] private EventDefinition accidentEvent;
+    [SerializeField] private List<ActivitySlot> slots;
+
+    // ---------- HUD ----------
+    [Header("HUD")]
+    [SerializeField] private TextMeshProUGUI clockText;
+    [SerializeField] private TextMeshProUGUI actionText;
+    [SerializeField] private TextMeshProUGUI careerText;
+    [SerializeField] private Image energyBarFill;
+    [SerializeField] private Image toiletBarFill;
+
+    // ---------- Coworker panel ----------
+    [Header("Coworker panel")]
+    [SerializeField] private GameObject coworkerPanel;
+    [SerializeField] private GameObject coworkerButtonPrefab;
     [SerializeField] private Button socialiseButton;
-    
+    [SerializeField] private Button cancelButton;
+
+    // ---------- Relationship dropdown ----------
+    [Header("Relationship dropdown")]
+    [SerializeField] private Button relationshipButton;
+    [SerializeField] private GameObject relationshipPanel;
+    [SerializeField] private GameObject relationshipRowPrefab;
+
+    // ---------- Event modal ----------
+    [Header("Event modal")]
+    [SerializeField] private GameObject eventBackdrop;
+    [SerializeField] private TextMeshProUGUI eventText;
+    [SerializeField] private Transform choiceContainer;
+    [SerializeField] private GameObject choiceButtonPrefab;
+
+    // ---------- Day cycle & speed ----------
+    [Header("Day cycle & speed")]
+    [SerializeField] private Button goHomeButton;
     [SerializeField] private Button pauseButton;
     [SerializeField] private Button playButton;
     [SerializeField] private Button fastButton;
     [SerializeField] private Button superButton;
-    
-    [SerializeField] private List<ActivitySlot> slots;
+    [SerializeField] private float secondsPerMinute = 1f;
 
-    [SerializeField] private float secondsPerMinute = 1f; // game speed
-    
-    [SerializeField] private GameObject eventBackdrop;
-    [SerializeField] private TextMeshProUGUI eventText;
-    [SerializeField] private Transform choiceContainer;
-    [SerializeField] private GameObject choiceButtonPrefab;   
-    
-    [SerializeField] private EventDefinition accidentEvent;
-
-    [SerializeField] private Image energyBarFill;
-    [SerializeField] private Image toiletBarFill;
-    [SerializeField] private TextMeshProUGUI clockText;
-    [SerializeField] private TextMeshProUGUI actionText;
-
-    
-    private float secondsAccumulator = 0f;
-    private bool isPaused = false;
-    
+    // ---------- Runtime state ----------
     private GameState gameState;
     private DaySimulation simulation;
-    
-    [SerializeField] private List<EventDefinition> allEvents;
-    
-    [SerializeField] private List<CoworkerDefinition> coworkers;
-    
+    private float secondsAccumulator = 0f;
+    private bool isPaused = false;
+
     private Dictionary<CoworkerDefinition, Button> coworkerButtons = new Dictionary<CoworkerDefinition, Button>();
-    
+    private Dictionary<CoworkerDefinition, TextMeshProUGUI> relationshipRows = new Dictionary<CoworkerDefinition, TextMeshProUGUI>();
+
+
+    // =====================================================================
+    // Setup
+    // =====================================================================
+
     void Start()
     {
         gameState = new GameState();
         gameState.InitCoworkers(coworkers);
-        simulation = new DaySimulation(gameState);
-        
-        simulation.ScheduleEventForDay(allEvents);
-        simulation.SetAccidentEvent(accidentEvent);  
-        
+
+        StartNewDay();
+
+        WireButtons();
+
+        BuildCoworkerButtons();
+        BuildRelationshipRows();
+
+        coworkerPanel.SetActive(false);
+        relationshipPanel.SetActive(false);
+        goHomeButton.gameObject.SetActive(false);
+
+        UpdateSpeedButtons(playButton);
+        UpdateDisplay();
+    }
+
+    void WireButtons()
+    {
         foreach (ActivitySlot slot in slots)
         {
             ActivityDefinition activity = slot.activity;
             slot.button.onClick.AddListener(() => OnActivityClicked(activity));
         }
-        
-        goHomeButton.onClick.AddListener(OnGoHomeClicked);
+
+        socialiseButton.onClick.AddListener(OnSocialiseClicked);
         cancelButton.onClick.AddListener(OnCancelClicked);
-        goHomeButton.gameObject.SetActive(false);
-        
-        socialiseButton.onClick.AddListener(OnSocialiseClicked);  
-        
+        relationshipButton.onClick.AddListener(OnRelationshipClicked);
+        goHomeButton.onClick.AddListener(OnGoHomeClicked);
+
         pauseButton.onClick.AddListener(OnPauseClicked);
         playButton.onClick.AddListener(OnPlayClicked);
         fastButton.onClick.AddListener(OnFastClicked);
         superButton.onClick.AddListener(OnSuperClicked);
-        UpdateSpeedButtons(playButton);
-        
-        BuildCoworkerButtons();
-        RefreshCoworkerButtons();
-        coworkerPanel.SetActive(false); 
-
-        UpdateDisplay();
     }
 
-    void Update()
+    // Creates a fresh day and gives it everything it needs.
+    void StartNewDay()
     {
-        if (simulation.IsDayOver) return;
-        if (isPaused) return; 
-        
-        // Presentation concern: convert real seconds into ticks.
-        secondsAccumulator += Time.deltaTime;
-        if (secondsAccumulator >= secondsPerMinute)  
-        {
-            secondsAccumulator -= secondsPerMinute;
-            simulation.Tick();       // the CONSEQUENCE lives in the sim
-            
-            // check if the tick scheduled an event to show
-            EventDefinition ev = simulation.ConsumePendingEvent();
-            if (ev != null)
-                ShowEvent(ev);
-            
-            UpdateDisplay();
-        }
-        
-        // detect world clicks
-        if (Input.GetMouseButtonDown(0))   // left click
-        {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out RaycastHit hit))
-            {
-                ClickableObject clickable = hit.collider.GetComponentInParent<ClickableObject>();
-                if (clickable != null)
-                    simulation.DoActivity(clickable.activity);
-            }
-            
-        }
-    }
-
-    void OnActivityClicked(ActivityDefinition activity)
-    {
-        simulation.DoActivity(activity);
-        UpdateDisplay();
-    }
-    
-    void OnGoHomeClicked()         
-    {
-        gameState.dayNumber++;
-        gameState.RecoverOvernight(); 
         simulation = new DaySimulation(gameState);
         simulation.ScheduleEventForDay(allEvents);
         simulation.SetAccidentEvent(accidentEvent);
-
-        foreach (ActivitySlot slot in slots)
-            slot.button.interactable = true;
-        socialiseButton.interactable = true; 
-        
-        goHomeButton.gameObject.SetActive(false);
-        UpdateDisplay();
     }
 
-    // Reads the sim's state and draws it. No logic, just display.
+
+    // =====================================================================
+    // Main loop
+    // =====================================================================
+
+    void Update()
+    {
+        HandleWorldClicks();
+
+        if (simulation.IsDayOver) return;
+        if (isPaused) return;
+
+        // Presentation concern: convert real seconds into ticks.
+        secondsAccumulator += Time.deltaTime;
+        if (secondsAccumulator >= secondsPerMinute)
+        {
+            secondsAccumulator -= secondsPerMinute;
+            simulation.Tick();       // the CONSEQUENCE lives in the sim
+
+            EventDefinition ev = simulation.ConsumePendingEvent();
+            if (ev != null)
+                ShowEvent(ev);
+
+            UpdateDisplay();
+        }
+    }
+
+    void HandleWorldClicks()
+    {
+        if (!Input.GetMouseButtonDown(0)) return;
+
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if (!Physics.Raycast(ray, out RaycastHit hit)) return;
+
+        ClickableObject clickable = hit.collider.GetComponentInParent<ClickableObject>();
+        if (clickable != null)
+        {
+            simulation.DoActivity(clickable.activity);
+            UpdateDisplay();
+        }
+    }
+
+
+    // =====================================================================
+    // Display
+    // =====================================================================
+
     void UpdateDisplay()
     {
-        energyBarFill.fillAmount = (float)simulation.Energy / 100f;
+        UpdateBar(energyBarFill, simulation.Energy);
+        UpdateBar(toiletBarFill, simulation.toilet);
         
-        if (simulation.Energy < 15)
-            energyBarFill.color = Color.red;
-        else if (simulation.Energy < 30)
-            energyBarFill.color = new Color(1f, 0.6f, 0f);   // amber
-        else
-            energyBarFill.color = Color.green;
-        
-        toiletBarFill.fillAmount = (float)simulation.toilet / 100f;
-        
-        if (simulation.toilet < 15)
-            toiletBarFill.color = Color.red;
-        else if (simulation.toilet < 30)
-            toiletBarFill.color = new Color(1f, 0.6f, 0f);   // amber
-        else
-            toiletBarFill.color = Color.green;
-        
-        // clock text
+        if (relationshipPanel.activeSelf)
+            RefreshRelationshipRows();
+
         clockText.text = $"{gameState.DayName()}, Week {gameState.WeekNumber()}/26\n{FormatTime(simulation.Clock)}";
-        
+        careerText.text = $"Career: {simulation.Career}";
+        relationshipButton.GetComponentInChildren<TextMeshProUGUI>().text =
+            $"Relationships: {simulation.AverageRelationship}";
+
         if (simulation.IsDayOver)
         {
             actionText.text = "Day over, go home";
-            foreach (ActivitySlot slot in slots)
-                slot.button.interactable = false;
-            socialiseButton.interactable = false;
+            SetActionButtonsInteractable(false);
             goHomeButton.gameObject.SetActive(true);
             return;
         }
@@ -181,16 +189,37 @@ public class DayUI : MonoBehaviour
         if (simulation.IsBusy)
         {
             actionText.text = $"{simulation.CurrentActivityName} ({simulation.RemainingMinutes} min left)";
+            SetActionButtonsInteractable(false);
             return;
         }
-        
-        actionText.text = "";        // idle: show nothing
-        
+
+        // Idle: nothing in progress, enable whatever is affordable.
+        actionText.text = "";
+        socialiseButton.interactable = true;
         foreach (ActivitySlot slot in slots)
             slot.button.interactable = simulation.CanAfford(slot.activity);
-        
     }
-    
+
+    // Sets a bar's fill and colours it by how low the value is.
+    void UpdateBar(Image fill, int value)
+    {
+        fill.fillAmount = (float)value / 100f;
+
+        if (value < 15)
+            fill.color = Color.red;
+        else if (value < 30)
+            fill.color = new Color(1f, 0.6f, 0f);   // amber
+        else
+            fill.color = Color.green;
+    }
+
+    void SetActionButtonsInteractable(bool on)
+    {
+        socialiseButton.interactable = on;
+        foreach (ActivitySlot slot in slots)
+            slot.button.interactable = on;
+    }
+
     // Pure display formatting — correctly a UI concern.
     string FormatTime(int minutes)
     {
@@ -202,7 +231,23 @@ public class DayUI : MonoBehaviour
         string suffix = hours < 12 ? "AM" : "PM";
         return $"{displayHours}:{mins.ToString("D2")} {suffix}";
     }
-    
+
+
+    // =====================================================================
+    // Activities
+    // =====================================================================
+
+    void OnActivityClicked(ActivityDefinition activity)
+    {
+        simulation.DoActivity(activity);
+        UpdateDisplay();
+    }
+
+
+    // =====================================================================
+    // Coworker panel (pick someone to talk to)
+    // =====================================================================
+
     void BuildCoworkerButtons()
     {
         foreach (CoworkerDefinition coworker in coworkers)
@@ -210,15 +255,15 @@ public class DayUI : MonoBehaviour
             GameObject buttonObj = Instantiate(coworkerButtonPrefab, coworkerPanel.transform);
 
             Button btn = buttonObj.GetComponent<Button>();
-            coworkerButtons[coworker] = btn;        // remember it
+            coworkerButtons[coworker] = btn;
 
-            CoworkerDefinition c = coworker;
+            CoworkerDefinition c = coworker;   // capture into local for the lambda
             btn.onClick.AddListener(() => OnCoworkerClicked(c));
         }
 
         cancelButton.transform.SetAsLastSibling();
     }
-    
+
     void RefreshCoworkerButtons()
     {
         foreach (var pair in coworkerButtons)
@@ -233,50 +278,63 @@ public class DayUI : MonoBehaviour
         }
     }
 
+    void OnSocialiseClicked()
+    {
+        RefreshCoworkerButtons();
+        coworkerPanel.SetActive(true);
+        isPaused = true;
+    }
+
     void OnCoworkerClicked(CoworkerDefinition coworker)
     {
         simulation.DoActivity(coworker.talkActivity);
         coworkerPanel.SetActive(false);
-        isPaused = false;  
+        isPaused = false;
         UpdateDisplay();
     }
-    
-    void OnSocialiseClicked()         
-    {
-        RefreshCoworkerButtons();  
-        coworkerPanel.SetActive(true);
-        isPaused = true; 
-    }
-    
+
     void OnCancelClicked()
     {
         coworkerPanel.SetActive(false);
         isPaused = false;
     }
-    
-    void OnPauseClicked()  { isPaused = true; UpdateSpeedButtons(pauseButton);}
-    void OnPlayClicked()   { isPaused = false; secondsPerMinute = 1f; UpdateSpeedButtons(playButton);}
-    void OnFastClicked()   { isPaused = false; secondsPerMinute = 0.3f; UpdateSpeedButtons(fastButton);}
-    void OnSuperClicked()  { isPaused = false; secondsPerMinute = 0.05f; UpdateSpeedButtons(superButton);}
-    
-    void UpdateSpeedButtons(Button active)
-    {
-        // reset all to normal (unhighlighted)
-        pauseButton.GetComponent<Image>().color = Color.white;
-        playButton.GetComponent<Image>().color = Color.white;
-        fastButton.GetComponent<Image>().color = Color.white;
-        superButton.GetComponent<Image>().color = Color.white;
 
-        // highlight the active one in its own color
-        if (active == pauseButton)
-            active.GetComponent<Image>().color = Color.red;
-        else
-            active.GetComponent<Image>().color = Color.green;
+
+    // =====================================================================
+    // Relationship dropdown (read-only breakdown)
+    // =====================================================================
+
+    void BuildRelationshipRows()
+    {
+        foreach (CoworkerDefinition coworker in coworkers)
+        {
+            GameObject rowObj = Instantiate(relationshipRowPrefab, relationshipPanel.transform);
+            relationshipRows[coworker] = rowObj.GetComponent<TextMeshProUGUI>();
+        }
     }
-    
+
+    void RefreshRelationshipRows()
+    {
+        foreach (var pair in relationshipRows)
+            pair.Value.text = $"{pair.Key.coworkerName}: {gameState.GetRelationship(pair.Key)}";
+    }
+
+    // Toggles the dropdown open/closed.
+    void OnRelationshipClicked()
+    {
+        bool nowOpen = !relationshipPanel.activeSelf;
+        relationshipPanel.SetActive(nowOpen);
+        if (nowOpen) RefreshRelationshipRows();
+    }
+
+
+    // =====================================================================
+    // Events
+    // =====================================================================
+
     void ShowEvent(EventDefinition ev)
     {
-        eventBackdrop.transform.SetAsLastSibling();
+        eventBackdrop.transform.SetAsLastSibling();   // draw on top of everything
         isPaused = true;
         eventBackdrop.SetActive(true);
         eventText.text = ev.title + "\n\n" + ev.description;
@@ -285,45 +343,84 @@ public class DayUI : MonoBehaviour
         foreach (Transform child in choiceContainer)
             Destroy(child.gameObject);
 
-        // one button per choice
         foreach (EventChoice choice in ev.choices)
         {
             GameObject btnObj = Instantiate(choiceButtonPrefab, choiceContainer);
             btnObj.GetComponentInChildren<TextMeshProUGUI>().text = choice.label;
 
-            EventChoice c = choice;   // closure capture
+            EventChoice c = choice;   // capture into local for the lambda
             btnObj.GetComponent<Button>().onClick.AddListener(() => OnChoicePicked(c));
         }
     }
-    
+
     void OnChoicePicked(EventChoice choice)
     {
         foreach (Effect effect in choice.effects)
-        {
-            if (effect.affects == StatType.Career)
-            {
-                gameState.employee.career += effect.amount;
-            }
-            else if (effect.affects == StatType.Energy)
-            {
-                gameState.employee.energy += effect.amount;
-                gameState.employee.energy = Mathf.Clamp(gameState.employee.energy, 0, 100);
-            }
-            else if (effect.affects == StatType.CoworkerRelationship)
-            {
-                gameState.ChangeRelationship(effect.targetCoworker, effect.amount);
-            }
-            else // Relationships — everyone
-            {
-                List<CoworkerDefinition> keys = new List<CoworkerDefinition>(gameState.relationships.Keys);
-                foreach (CoworkerDefinition c in keys)
-                    gameState.ChangeRelationship(c, effect.amount);
-            }
-        }
+            ApplyEffect(effect);
 
         eventBackdrop.SetActive(false);
         isPaused = false;
         UpdateDisplay();
     }
-    
+
+    void ApplyEffect(Effect effect)
+    {
+        if (effect.affects == StatType.Career)
+        {
+            gameState.employee.career += effect.amount;
+        }
+        else if (effect.affects == StatType.Energy)
+        {
+            gameState.employee.energy += effect.amount;
+            gameState.employee.energy = Mathf.Clamp(gameState.employee.energy, 0, 100);
+        }
+        else if (effect.affects == StatType.CoworkerRelationship)
+        {
+            gameState.ChangeRelationship(effect.targetCoworker, effect.amount);
+        }
+        else // Relationships — everyone
+        {
+            // copy the keys first: ChangeRelationship modifies the dictionary
+            List<CoworkerDefinition> keys = new List<CoworkerDefinition>(gameState.relationships.Keys);
+            foreach (CoworkerDefinition c in keys)
+                gameState.ChangeRelationship(c, effect.amount);
+        }
+    }
+
+
+    // =====================================================================
+    // Day cycle
+    // =====================================================================
+
+    void OnGoHomeClicked()
+    {
+        gameState.dayNumber++;
+        gameState.RecoverOvernight();
+
+        StartNewDay();
+
+        goHomeButton.gameObject.SetActive(false);
+        isPaused = false;
+        UpdateDisplay();
+    }
+
+
+    // =====================================================================
+    // Speed controls
+    // =====================================================================
+
+    void OnPauseClicked() { isPaused = true;  UpdateSpeedButtons(pauseButton); }
+    void OnPlayClicked()  { isPaused = false; secondsPerMinute = 1f;    UpdateSpeedButtons(playButton); }
+    void OnFastClicked()  { isPaused = false; secondsPerMinute = 0.3f;  UpdateSpeedButtons(fastButton); }
+    void OnSuperClicked() { isPaused = false; secondsPerMinute = 0.05f; UpdateSpeedButtons(superButton); }
+
+    void UpdateSpeedButtons(Button active)
+    {
+        pauseButton.GetComponent<Image>().color = Color.white;
+        playButton.GetComponent<Image>().color = Color.white;
+        fastButton.GetComponent<Image>().color = Color.white;
+        superButton.GetComponent<Image>().color = Color.white;
+
+        active.GetComponent<Image>().color = (active == pauseButton) ? Color.red : Color.green;
+    }
 }

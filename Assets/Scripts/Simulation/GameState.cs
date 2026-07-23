@@ -55,6 +55,12 @@ public class GameState
             total += value;
         return total;   // or return total/relationships.Count for an average
     }
+
+    public int AverageLikability()
+    {
+        if (relationships.Count == 0) return 0;
+        return OverallLikability() / relationships.Count;
+    } 
     
     public string DayName()
     {
