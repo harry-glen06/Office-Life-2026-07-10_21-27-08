@@ -24,6 +24,9 @@ public class DaySimulation
 
     private float energyAccumulator = 0f;
     private float gainAccumulator = 0f;
+    private float toiletAccumulator = 0f;
+    
+    private EventDefinition accidentEvent;
 
     public enum DayState { Idle, Busy }
 
@@ -43,6 +46,9 @@ public class DaySimulation
     public bool IsBusy => state == DayState.Busy;
     public int RemainingMinutes => remainingMinutes;
     public string CurrentActivityName => currentActivity != null ? currentActivity.activityName : "";
+    
+    public int toilet => game.employee.toilet;
+    private const float ToiletDrainPerMinute = 0.4f; 
 
     // Player clicked an activity. Tries to START it.
     public bool DoActivity(ActivityDefinition activity)
@@ -73,6 +79,20 @@ public class DaySimulation
 
         clock += 1;
         
+        toiletAccumulator += ToiletDrainPerMinute;
+        while (toiletAccumulator >= 1f)
+        {
+            toiletAccumulator -= 1f;         
+            game.employee.toilet -= 1;
+        }
+        game.employee.toilet = Mathf.Clamp(game.employee.toilet, 0, 100);
+        
+        if (game.employee.toilet <= 0 && accidentEvent != null)
+        {
+            pendingEvent = accidentEvent;
+            game.employee.toilet = 85;
+        }
+        
         // event firing check
         if (scheduledEvent != null && !eventFiredToday && clock >= scheduledTime)
         {
@@ -82,7 +102,7 @@ public class DaySimulation
 
         if (state == DayState.Busy)
         {
-            currentActivity.AdvanceOneMinute(game, ref energyAccumulator, ref gainAccumulator);
+            currentActivity.AdvanceOneMinute(game, ref energyAccumulator, ref gainAccumulator, ref toiletAccumulator);
 
             remainingMinutes -= 1;
             if (remainingMinutes <= 0)
@@ -140,7 +160,7 @@ public class DaySimulation
     
     private EventDefinition pendingEvent;   // an event waiting to be displayed
 
-// DayUI calls this each frame; returns the pending event (and clears it), or null
+    // DayUI calls this each frame; returns the pending event (and clears it), or null
     public EventDefinition ConsumePendingEvent()
     {
         EventDefinition ev = pendingEvent;
@@ -148,4 +168,10 @@ public class DaySimulation
         return ev;
     }
     
-}
+    // setter, called once from DayUI
+    public void SetAccidentEvent(EventDefinition ev)
+    {
+        accidentEvent = ev;
+    }
+    
+} 

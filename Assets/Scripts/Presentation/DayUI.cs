@@ -35,6 +35,8 @@ public class DayUI : MonoBehaviour
     [SerializeField] private Transform choiceContainer;
     [SerializeField] private GameObject choiceButtonPrefab;   
     
+    [SerializeField] private EventDefinition accidentEvent;
+    
     private float secondsAccumulator = 0f;
     private bool isPaused = false;
     
@@ -54,6 +56,7 @@ public class DayUI : MonoBehaviour
         simulation = new DaySimulation(gameState);
         
         simulation.ScheduleEventForDay(allEvents);
+        simulation.SetAccidentEvent(accidentEvent);  
         
         foreach (ActivitySlot slot in slots)
         {
@@ -126,6 +129,7 @@ public class DayUI : MonoBehaviour
         gameState.RecoverOvernight(); 
         simulation = new DaySimulation(gameState);
         simulation.ScheduleEventForDay(allEvents);
+        simulation.SetAccidentEvent(accidentEvent);
 
         foreach (ActivitySlot slot in slots)
             slot.button.interactable = true;
@@ -164,7 +168,7 @@ public class DayUI : MonoBehaviour
     string StatsLine()         
     {
         return $"{gameState.DayName()}, Week {gameState.WeekNumber()}/26 \nEnergy: {simulation.Energy}  Career: {simulation.Career}  " +
-               $"Rel: {simulation.Relationships}  Time: {FormatTime(simulation.Clock)}";
+               $"Rel: {simulation.Relationships}  Time: {FormatTime(simulation.Clock)} Toilet: {simulation.toilet}";
     }
     
     // Pure display formatting — correctly a UI concern.

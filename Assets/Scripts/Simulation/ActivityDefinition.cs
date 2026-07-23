@@ -9,6 +9,7 @@ public class ActivityDefinition : ScriptableObject
     public int energyCost;
     public StatType affects;
     public int amount;
+    public int toiletCost;
 
     public CoworkerDefinition targetCoworker;   // only used when affects == CoworkerRelationship
 
@@ -23,16 +24,28 @@ public class ActivityDefinition : ScriptableObject
 
     // Does ONE minute of this activity. Takes GameState so it can reach both
     // the employee AND the coworker relationships.
-    public void AdvanceOneMinute(GameState game, ref float energyAccumulator, ref float gainAccumulator)
+    public void AdvanceOneMinute(GameState game, ref float energyAccumulator, ref float gainAccumulator, ref float toiletAccumulator)
     {
-        // effectiveness from CURRENT energy
-        const int threshold = 30;
-        const float floor = 0.2f;
-        float effectiveness;
-        if (game.employee.energy >= threshold)
-            effectiveness = 1f;
+        // --- energy multiplier ---
+        const int energyThreshold = 30;
+        const float energyFloor = 0.2f;
+        float energyMult;
+        if (game.employee.energy >= energyThreshold)
+            energyMult = 1f;
         else
-            effectiveness = floor + (1f - floor) * ((float)game.employee.energy / threshold);
+            energyMult = energyFloor + (1f - energyFloor) * ((float)game.employee.energy / energyThreshold);
+        
+        // --- toilet multiplier (cliff, only bites below 15) ---
+        const int toiletThreshold = 15;
+        const float toiletFloor = 0.4f;
+        float toiletMult;
+        if (game.employee.toilet >= toiletThreshold)
+            toiletMult = 1f;
+        else
+            toiletMult = toiletFloor + (1f - toiletFloor) * ((float)game.employee.toilet / toiletThreshold);
+        
+        // multiply them
+        float effectiveness = energyMult * toiletMult;
 
         // ENERGY: add this minute's slice, then apply whole points
         energyAccumulator += (float)energyCost / timeCost;
@@ -68,5 +81,20 @@ public class ActivityDefinition : ScriptableObject
                     game.ChangeRelationship(c, 1);
             }
         }
+        // TOILET: add this minute's slice, then apply whole points ---
+        toiletAccumulator += (float)toiletCost / timeCost;
+        while (toiletAccumulator >= 1f)          // draining (coffee, positive cost)
+        {
+            toiletAccumulator -= 1f;
+            game.employee.toilet -= 1;
+        }
+
+        while (toiletAccumulator <= -1f)         // restoring (using the toilet, negative cost)
+        {
+            toiletAccumulator += 1f;
+            game.employee.toilet += 1;
+        }
+
+        game.employee.toilet = Mathf.Clamp(game.employee.toilet, 0, 100);
     }
 }

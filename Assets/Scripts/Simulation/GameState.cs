@@ -13,6 +13,8 @@ public class GameState
     // How sleep works: recover some of the gap toward full.
     public void RecoverOvernight()
     {
+        employee.toilet = 90;   
+        
         // Did a weekend just pass? (we're now arriving at a Monday, past day 1)
         bool weekendJustHappened = (dayNumber > 1) && (DayName() == "Monday");
 
