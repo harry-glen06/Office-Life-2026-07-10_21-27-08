@@ -48,7 +48,7 @@ public class DaySimulation
     public string CurrentActivityName => currentActivity != null ? currentActivity.activityName : "";
     
     public int toilet => game.employee.toilet;
-    private const float ToiletDrainPerMinute = 0.4f; 
+    private const float ToiletDrainPerMinute = 0.3f; 
 
     // Player clicked an activity. Tries to START it.
     public bool DoActivity(ActivityDefinition activity)

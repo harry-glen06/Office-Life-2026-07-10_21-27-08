@@ -26,7 +26,6 @@ public class DayUI : MonoBehaviour
     [SerializeField] private Button superButton;
     
     [SerializeField] private List<ActivitySlot> slots;
-    [SerializeField] private TextMeshProUGUI statusText;
 
     [SerializeField] private float secondsPerMinute = 1f; // game speed
     
@@ -36,6 +35,12 @@ public class DayUI : MonoBehaviour
     [SerializeField] private GameObject choiceButtonPrefab;   
     
     [SerializeField] private EventDefinition accidentEvent;
+
+    [SerializeField] private Image energyBarFill;
+    [SerializeField] private Image toiletBarFill;
+    [SerializeField] private TextMeshProUGUI clockText;
+    [SerializeField] private TextMeshProUGUI actionText;
+
     
     private float secondsAccumulator = 0f;
     private bool isPaused = false;
@@ -142,9 +147,30 @@ public class DayUI : MonoBehaviour
     // Reads the sim's state and draws it. No logic, just display.
     void UpdateDisplay()
     {
+        energyBarFill.fillAmount = (float)simulation.Energy / 100f;
+        
+        if (simulation.Energy < 15)
+            energyBarFill.color = Color.red;
+        else if (simulation.Energy < 30)
+            energyBarFill.color = new Color(1f, 0.6f, 0f);   // amber
+        else
+            energyBarFill.color = Color.green;
+        
+        toiletBarFill.fillAmount = (float)simulation.toilet / 100f;
+        
+        if (simulation.toilet < 15)
+            toiletBarFill.color = Color.red;
+        else if (simulation.toilet < 30)
+            toiletBarFill.color = new Color(1f, 0.6f, 0f);   // amber
+        else
+            toiletBarFill.color = Color.green;
+        
+        // clock text
+        clockText.text = $"{gameState.DayName()}, Week {gameState.WeekNumber()}/26\n{FormatTime(simulation.Clock)}";
+        
         if (simulation.IsDayOver)
         {
-            statusText.text = StatsLine() + "\nDay over, go home";
+            actionText.text = "Day over, go home";
             foreach (ActivitySlot slot in slots)
                 slot.button.interactable = false;
             socialiseButton.interactable = false;
@@ -154,21 +180,15 @@ public class DayUI : MonoBehaviour
 
         if (simulation.IsBusy)
         {
-            statusText.text = StatsLine() + 
-                              $"\nCurrently: {simulation.CurrentActivityName} ({simulation.RemainingMinutes} min left)";
+            actionText.text = $"{simulation.CurrentActivityName} ({simulation.RemainingMinutes} min left)";
             return;
         }
+        
+        actionText.text = "";        // idle: show nothing
         
         foreach (ActivitySlot slot in slots)
             slot.button.interactable = simulation.CanAfford(slot.activity);
         
-        statusText.text = StatsLine();
-    }
-
-    string StatsLine()         
-    {
-        return $"{gameState.DayName()}, Week {gameState.WeekNumber()}/26 \nEnergy: {simulation.Energy}  Career: {simulation.Career}  " +
-               $"Rel: {simulation.Relationships}  Time: {FormatTime(simulation.Clock)} Toilet: {simulation.toilet}";
     }
     
     // Pure display formatting — correctly a UI concern.
@@ -256,6 +276,7 @@ public class DayUI : MonoBehaviour
     
     void ShowEvent(EventDefinition ev)
     {
+        eventBackdrop.transform.SetAsLastSibling();
         isPaused = true;
         eventBackdrop.SetActive(true);
         eventText.text = ev.title + "\n\n" + ev.description;
