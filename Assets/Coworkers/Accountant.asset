@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e0125fb8411384975ad03db5bae033ca, type: 3}
   m_Name: Accountant
   m_EditorClassIdentifier: Assembly-CSharp::CoworkerDefinition
-  coworkerName: Accoutntant
+  coworkerName: Accountant
   startingRelationship: 11
   energyCost: 16
   relationshipGain: 2
