@@ -69,13 +69,14 @@ public class DaySimulation
     // Activities
     // =====================================================================
 
-    // Player clicked an activity. Tries to START it.
-    public bool DoActivity(ActivityDefinition activity)
+    // Player picked an activity. Tries to START it, and says why if it can't.
+    public ActivityResult DoActivity(ActivityDefinition activity)
     {
-        if (activity == null) return false;
-        if (dayOver) return false;
-        if (state == DayState.Busy) return false;
-        if (!activity.CanAfford(game.employee, clock)) return false;
+        if (activity == null) return ActivityResult.DayOver;
+        if (dayOver) return ActivityResult.DayOver;
+        if (state == DayState.Busy) return ActivityResult.AlreadyBusy;
+        if (!activity.HasEnoughTime(clock)) return ActivityResult.NotEnoughTime;
+        if (!activity.HasEnoughEnergy(game.employee)) return ActivityResult.TooTired;
 
         state = DayState.Busy;
         currentActivity = activity;
@@ -83,9 +84,10 @@ public class DaySimulation
         energyAccumulator = 0f;
         gainAccumulator = 0f;
         activityToiletAccumulator = 0f;
-        return true;
+        return ActivityResult.Started;
     }
 
+    // Used by the UI to grey out buttons.
     public bool CanAfford(ActivityDefinition activity)
     {
         if (activity == null) return false;

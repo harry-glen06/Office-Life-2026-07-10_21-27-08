@@ -1,0 +1,1 @@
+public enum ActivityResult { Started, DayOver, AlreadyBusy, TooTired, NotEnoughTime }

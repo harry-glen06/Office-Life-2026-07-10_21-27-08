@@ -43,7 +43,11 @@ public class DayUI : MonoBehaviour
     // ---------- Events ----------
     [Header("Events")]
     [SerializeField] private EventUI eventUI;
-    [SerializeField] List<EventDefinition> triggerEvents;
+    [SerializeField] private List<EventDefinition> triggerEvents;
+
+    // ---------- Character ----------
+    [Header("Character")]
+    [SerializeField] private Animator playerAnimator;
 
     // ---------- Day cycle & speed ----------
     [Header("Day cycle & speed")]
@@ -59,8 +63,9 @@ public class DayUI : MonoBehaviour
     private DaySimulation simulation;
     private float secondsAccumulator = 0f;
     private bool isPaused = false;
-    
-    [SerializeField] private Animator playerAnimator;
+
+    private string failureMessage = "";
+    private float failureTimer = 0f;
 
     private Dictionary<CoworkerDefinition, Button> coworkerButtons = new Dictionary<CoworkerDefinition, Button>();
     private Dictionary<CoworkerDefinition, TextMeshProUGUI> relationshipRows = new Dictionary<CoworkerDefinition, TextMeshProUGUI>();
@@ -129,6 +134,10 @@ public class DayUI : MonoBehaviour
     {
         HandleWorldClicks();
 
+        // failure messages fade out in real time, even while paused
+        if (failureTimer > 0f)
+            failureTimer -= Time.deltaTime;
+
         if (simulation.IsDayOver) return;
         if (isPaused) return;
 
@@ -160,7 +169,7 @@ public class DayUI : MonoBehaviour
         ClickableObject clickable = hit.collider.GetComponentInParent<ClickableObject>();
         if (clickable != null)
         {
-            simulation.DoActivity(clickable.activity);
+            ReportResult(simulation.DoActivity(clickable.activity));
             UpdateDisplay();
         }
     }
@@ -181,7 +190,7 @@ public class DayUI : MonoBehaviour
     {
         playerAnimator.SetInteger("pose", (int)simulation.CurrentPose);
         playerAnimator.SetBool("isTired", simulation.Energy < 30);
-        
+
         UpdateBar(energyBarFill, simulation.Energy);
         UpdateBar(toiletBarFill, simulation.Toilet);
 
@@ -199,21 +208,41 @@ public class DayUI : MonoBehaviour
             actionText.text = "Day over, go home";
             SetActionButtonsInteractable(false);
             goHomeButton.gameObject.SetActive(true);
-            return;
         }
-
-        if (simulation.IsBusy)
+        else if (simulation.IsBusy)
         {
             actionText.text = $"{simulation.CurrentActivityName} ({simulation.RemainingMinutes} min left)";
             SetActionButtonsInteractable(false);
-            return;
+        }
+        else
+        {
+            // Idle: nothing in progress, enable whatever is affordable.
+            actionText.text = "";
+            socialiseButton.interactable = true;
+            foreach (ActivitySlot slot in slots)
+                slot.button.interactable = simulation.CanAfford(slot.activity);
         }
 
-        // Idle: nothing in progress, enable whatever is affordable.
-        actionText.text = "";
-        socialiseButton.interactable = true;
-        foreach (ActivitySlot slot in slots)
-            slot.button.interactable = simulation.CanAfford(slot.activity);
+        // a recent failure overrides whatever the state text would have been
+        if (failureTimer > 0f)
+            actionText.text = failureMessage;
+    }
+
+    // Turns a refused action into something the player can read.
+    void ReportResult(ActivityResult result)
+    {
+        if (result == ActivityResult.Started) return;
+
+        if (result == ActivityResult.TooTired)
+            failureMessage = "Too tired for that";
+        else if (result == ActivityResult.NotEnoughTime)
+            failureMessage = "Not enough time left today";
+        else if (result == ActivityResult.AlreadyBusy)
+            failureMessage = "Already busy";
+        else
+            failureMessage = "The day's over";
+
+        failureTimer = 2f;   // seconds on screen
     }
 
     // Sets a bar's fill and colours it by how low the value is.
@@ -255,7 +284,7 @@ public class DayUI : MonoBehaviour
 
     void OnActivityClicked(ActivityDefinition activity)
     {
-        simulation.DoActivity(activity);
+        ReportResult(simulation.DoActivity(activity));
         UpdateDisplay();
     }
 
@@ -303,7 +332,7 @@ public class DayUI : MonoBehaviour
 
     void OnCoworkerClicked(CoworkerDefinition coworker)
     {
-        simulation.DoActivity(coworker.talkActivity);
+        ReportResult(simulation.DoActivity(coworker.talkActivity));
         coworkerPanel.SetActive(false);
         isPaused = false;
         UpdateDisplay();
