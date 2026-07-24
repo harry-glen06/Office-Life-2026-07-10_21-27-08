@@ -2703,7 +2703,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: bef18d19322614d39aa0a27a8d051265, type: 2}
   - {fileID: 11400000, guid: a42e5269ae7db4339867f9d010019811, type: 2}
   - {fileID: 11400000, guid: 5b60107c7454640009a51fa6009b1238, type: 2}
-  accidentEvent: {fileID: 11400000, guid: a93bcf0ffc59048e29e78539637dbd90, type: 2}
   slots: []
   clockText: {fileID: 1967846810}
   actionText: {fileID: 812175924}
@@ -2719,7 +2718,7 @@ MonoBehaviour:
   relationshipRowPrefab: {fileID: 6198490715832680977, guid: b022579f94b4c4ae8a74c72890d3c8f1, type: 3}
   eventUI: {fileID: 766672147}
   triggerEvents:
-  - {fileID: 11400000, guid: 4348f01faf4dc4f7bb9ed31d8d8d65a9, type: 2}
+  - {fileID: 11400000, guid: a93bcf0ffc59048e29e78539637dbd90, type: 2}
   goHomeButton: {fileID: 1287462740}
   pauseButton: {fileID: 383673246}
   playButton: {fileID: 808222154}

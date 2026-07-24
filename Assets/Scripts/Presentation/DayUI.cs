@@ -180,6 +180,7 @@ public class DayUI : MonoBehaviour
     void UpdateDisplay()
     {
         playerAnimator.SetInteger("pose", (int)simulation.CurrentPose);
+        playerAnimator.SetBool("isTired", simulation.Energy < 30);
         
         UpdateBar(energyBarFill, simulation.Energy);
         UpdateBar(toiletBarFill, simulation.Toilet);

@@ -18,4 +18,5 @@ MonoBehaviour:
   affects: 0
   amount: 0
   toiletCost: 25
+  pose: 3
   targetCoworker: {fileID: 0}
