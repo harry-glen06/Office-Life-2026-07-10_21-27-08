@@ -76,7 +76,7 @@ public class ActivityDefinition : ScriptableObject
             {
                 game.ChangeRelationship(targetCoworker, 1);   // one specific person
             }
-            else // StatType.Relationships — the whole team
+            else if (affects == StatType.Relationships) // StatType.Relationships — the whole team
             {
                 List<CoworkerDefinition> keys = new List<CoworkerDefinition>(game.relationships.Keys);
                 foreach (CoworkerDefinition c in keys)

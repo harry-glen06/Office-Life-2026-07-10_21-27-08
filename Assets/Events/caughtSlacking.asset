@@ -26,3 +26,8 @@ MonoBehaviour:
   requiredDay: 0
   requiredTime: 2
   chance: 0.05
+  conditions:
+  - stat: 3
+    mustBeBelow: 1
+    threshold: 25
+    targetCoworker: {fileID: 0}

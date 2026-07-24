@@ -34,3 +34,12 @@ MonoBehaviour:
   requiredDay: 0
   requiredTime: 0
   chance: 0.05
+  conditions:
+  - stat: 0
+    mustBeBelow: 0
+    threshold: 10
+    targetCoworker: {fileID: 0}
+  - stat: 2
+    mustBeBelow: 1
+    threshold: -10
+    targetCoworker: {fileID: 11400000, guid: ecb098f6540b64d6795448c76938c010, type: 2}

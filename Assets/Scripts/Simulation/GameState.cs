@@ -88,12 +88,34 @@ public class GameState
         {
             ChangeRelationship(effect.targetCoworker, effect.amount);
         }
-        else // Relationships — everyone
+        else if (effect.affects == StatType.Toilet)
+        {
+            employee.toilet += effect.amount;
+            employee.energy = Mathf.Clamp(employee.energy, 0, 100);
+        }
+        else if (effect.affects == StatType.Relationships) // Relationships — everyone
         {
             // copy the keys first: ChangeRelationship modifies the dictionary
             List<CoworkerDefinition> keys = new List<CoworkerDefinition>(relationships.Keys);
             foreach (CoworkerDefinition c in keys)
                 ChangeRelationship(c, effect.amount);
         }
+    }
+    public bool MeetsCondition(StatCondition c)
+    {
+        int value;
+
+        if (c.stat == StatType.Career)
+            value = employee.career;
+        else if (c.stat == StatType.Energy)
+            value = employee.energy;
+        else if (c.stat == StatType.Toilet)
+            value = employee.toilet;
+        else if (c.stat == StatType.CoworkerRelationship)
+            value = GetRelationship(c.targetCoworker);
+        else
+            value = AverageLikability();      // Relationships
+
+        return c.mustBeBelow ? value < c.threshold : value > c.threshold;
     }
 }

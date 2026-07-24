@@ -17,7 +17,6 @@ public class DayUI : MonoBehaviour
     [Header("Data")]
     [SerializeField] private List<CoworkerDefinition> coworkers;
     [SerializeField] private List<EventDefinition> allEvents;
-    [SerializeField] private EventDefinition accidentEvent;
     [SerializeField] private List<ActivitySlot> slots;
 
     // ---------- HUD ----------
@@ -44,6 +43,7 @@ public class DayUI : MonoBehaviour
     // ---------- Events ----------
     [Header("Events")]
     [SerializeField] private EventUI eventUI;
+    [SerializeField] List<EventDefinition> triggerEvents;
 
     // ---------- Day cycle & speed ----------
     [Header("Day cycle & speed")]
@@ -117,7 +117,7 @@ public class DayUI : MonoBehaviour
     {
         simulation = new DaySimulation(gameState);
         simulation.ScheduleEventForDay(allEvents);
-        simulation.SetAccidentEvent(accidentEvent);
+        simulation.SetTriggerEvents(triggerEvents);
     }
 
 
@@ -179,11 +179,10 @@ public class DayUI : MonoBehaviour
 
     void UpdateDisplay()
     {
-        Debug.Log($"{simulation.IsBusy} / {simulation.CurrentActivityName} / {simulation.CurrentPose}");
         playerAnimator.SetInteger("pose", (int)simulation.CurrentPose);
         
         UpdateBar(energyBarFill, simulation.Energy);
-        UpdateBar(toiletBarFill, simulation.toilet);
+        UpdateBar(toiletBarFill, simulation.Toilet);
 
         clockText.text = $"{gameState.DayName()}, Week {gameState.WeekNumber()}/26\n{FormatTime(simulation.Clock)}";
         careerText.text = $"Career: {simulation.Career}";

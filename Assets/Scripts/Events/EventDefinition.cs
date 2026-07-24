@@ -14,4 +14,5 @@ public class EventDefinition : ScriptableObject
     public DayRequirement requiredDay = DayRequirement.Any;   // when can this fire
     public TimeRequirement requiredTime = TimeRequirement.Any;
     public float chance;
+    public List<StatCondition> conditions;
 }

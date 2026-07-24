@@ -404,6 +404,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ClickableObject
   activity: {fileID: 11400000, guid: 2a641e79ff26444bea17d4b81b19a0fc, type: 2}
+--- !u!95 &143084828 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 6bf133e54925844e2a5eac943de90371, type: 3}
+  m_PrefabInstance: {fileID: 370366895}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &143084829 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 6bf133e54925844e2a5eac943de90371, type: 3}
@@ -967,6 +972,21 @@ PrefabInstance:
       objectReference: {fileID: 9100000, guid: cdd6194f69d1f4787a18956ba9276d10, type: 2}
     - target: {fileID: 5866666021909216657, guid: 6bf133e54925844e2a5eac943de90371, type: 3}
       propertyPath: m_CullingMode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5866666021909216657, guid: 6bf133e54925844e2a5eac943de90371, type: 3}
+      propertyPath: m_WarningMessage
+      value: "\nBinding warning: Some generic clip(s) animate transforms that are
+        already bound by a Humanoid avatar. These transforms can only be changed
+        by Humanoid clips.\n\tTransform 'mixamorig1:Hips'\n\tTransform 'mixamorig1:LeftHandThumb1'\n\tTransform
+        'mixamorig1:LeftHandPinky2'\n\tTransform 'mixamorig1:RightHand'\n\tTransform
+        'mixamorig1:LeftHandMiddle2'\n\tTransform 'mixamorig1:RightFoot'\n\tTransform
+        'mixamorig1:Spine1'\n\tTransform 'mixamorig1:RightLeg'\n\tTransform 'mixamorig1:RightHandMiddle2'\n\tTransform
+        'mixamorig1:Hips'\n\tand more ...\n\tFrom animation clip 'mixamo.com'\n\tFrom
+        animation clip 'mixamo.com'"
+      objectReference: {fileID: 0}
+    - target: {fileID: 5866666021909216657, guid: 6bf133e54925844e2a5eac943de90371, type: 3}
+      propertyPath: m_ApplyRootMotion
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
@@ -2698,12 +2718,15 @@ MonoBehaviour:
   relationshipPanel: {fileID: 1350253528}
   relationshipRowPrefab: {fileID: 6198490715832680977, guid: b022579f94b4c4ae8a74c72890d3c8f1, type: 3}
   eventUI: {fileID: 766672147}
+  triggerEvents:
+  - {fileID: 11400000, guid: 4348f01faf4dc4f7bb9ed31d8d8d65a9, type: 2}
   goHomeButton: {fileID: 1287462740}
   pauseButton: {fileID: 383673246}
   playButton: {fileID: 808222154}
   fastButton: {fileID: 787161212}
   superButton: {fileID: 566947437}
   secondsPerMinute: 0.25
+  playerAnimator: {fileID: 143084828}
 --- !u!114 &766672147
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6419,7 +6442,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 90a4e9aafd3b44cd6af4ccb32cfd3eeb, type: 2}
     - target: {fileID: 919132149155446097, guid: 6bf133e54925844e2a5eac943de90371, type: 3}
       propertyPath: m_Name
-      value: CharacterModel
+      value: BossModel
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 6bf133e54925844e2a5eac943de90371, type: 3}
       propertyPath: m_TagString
