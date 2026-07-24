@@ -41,12 +41,9 @@ public class DayUI : MonoBehaviour
     [SerializeField] private GameObject relationshipPanel;
     [SerializeField] private GameObject relationshipRowPrefab;
 
-    // ---------- Event modal ----------
-    [Header("Event modal")]
-    [SerializeField] private GameObject eventBackdrop;
-    [SerializeField] private TextMeshProUGUI eventText;
-    [SerializeField] private Transform choiceContainer;
-    [SerializeField] private GameObject choiceButtonPrefab;
+    // ---------- Events ----------
+    [Header("Events")]
+    [SerializeField] private EventUI eventUI;
 
     // ---------- Day cycle & speed ----------
     [Header("Day cycle & speed")]
@@ -75,6 +72,9 @@ public class DayUI : MonoBehaviour
     {
         gameState = new GameState();
         gameState.InitCoworkers(coworkers);
+
+        eventUI.Init(gameState);
+        eventUI.onEventClosed = OnEventClosed;
 
         StartNewDay();
 
@@ -139,7 +139,10 @@ public class DayUI : MonoBehaviour
 
             EventDefinition ev = simulation.ConsumePendingEvent();
             if (ev != null)
-                ShowEvent(ev);
+            {
+                isPaused = true;
+                eventUI.ShowEvent(ev);
+            }
 
             UpdateDisplay();
         }
@@ -160,6 +163,13 @@ public class DayUI : MonoBehaviour
         }
     }
 
+    // Called by EventUI once the player has resolved an event.
+    void OnEventClosed()
+    {
+        isPaused = false;
+        UpdateDisplay();
+    }
+
 
     // =====================================================================
     // Display
@@ -169,14 +179,15 @@ public class DayUI : MonoBehaviour
     {
         UpdateBar(energyBarFill, simulation.Energy);
         UpdateBar(toiletBarFill, simulation.toilet);
-        
-        if (relationshipPanel.activeSelf)
-            RefreshRelationshipRows();
 
         clockText.text = $"{gameState.DayName()}, Week {gameState.WeekNumber()}/26\n{FormatTime(simulation.Clock)}";
         careerText.text = $"Career: {simulation.Career}";
         relationshipButton.GetComponentInChildren<TextMeshProUGUI>().text =
             $"Relationships: {simulation.AverageRelationship}";
+
+        // keep the dropdown live while it's open
+        if (relationshipPanel.activeSelf)
+            RefreshRelationshipRows();
 
         if (simulation.IsDayOver)
         {
@@ -325,66 +336,6 @@ public class DayUI : MonoBehaviour
         bool nowOpen = !relationshipPanel.activeSelf;
         relationshipPanel.SetActive(nowOpen);
         if (nowOpen) RefreshRelationshipRows();
-    }
-
-
-    // =====================================================================
-    // Events
-    // =====================================================================
-
-    void ShowEvent(EventDefinition ev)
-    {
-        eventBackdrop.transform.SetAsLastSibling();   // draw on top of everything
-        isPaused = true;
-        eventBackdrop.SetActive(true);
-        eventText.text = ev.title + "\n\n" + ev.description;
-
-        // clear old choice buttons (events have different choices)
-        foreach (Transform child in choiceContainer)
-            Destroy(child.gameObject);
-
-        foreach (EventChoice choice in ev.choices)
-        {
-            GameObject btnObj = Instantiate(choiceButtonPrefab, choiceContainer);
-            btnObj.GetComponentInChildren<TextMeshProUGUI>().text = choice.label;
-
-            EventChoice c = choice;   // capture into local for the lambda
-            btnObj.GetComponent<Button>().onClick.AddListener(() => OnChoicePicked(c));
-        }
-    }
-
-    void OnChoicePicked(EventChoice choice)
-    {
-        foreach (Effect effect in choice.effects)
-            ApplyEffect(effect);
-
-        eventBackdrop.SetActive(false);
-        isPaused = false;
-        UpdateDisplay();
-    }
-
-    void ApplyEffect(Effect effect)
-    {
-        if (effect.affects == StatType.Career)
-        {
-            gameState.employee.career += effect.amount;
-        }
-        else if (effect.affects == StatType.Energy)
-        {
-            gameState.employee.energy += effect.amount;
-            gameState.employee.energy = Mathf.Clamp(gameState.employee.energy, 0, 100);
-        }
-        else if (effect.affects == StatType.CoworkerRelationship)
-        {
-            gameState.ChangeRelationship(effect.targetCoworker, effect.amount);
-        }
-        else // Relationships — everyone
-        {
-            // copy the keys first: ChangeRelationship modifies the dictionary
-            List<CoworkerDefinition> keys = new List<CoworkerDefinition>(gameState.relationships.Keys);
-            foreach (CoworkerDefinition c in keys)
-                gameState.ChangeRelationship(c, effect.amount);
-        }
     }
 
 

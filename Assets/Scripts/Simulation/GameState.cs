@@ -25,7 +25,7 @@ public class GameState
         }
         
         //Otherwise: normal partial overnight recovery
-        const float recoveryFraction = 0.75f;   // half the gap to full
+        const float recoveryFraction = 0.75f;  
 
         int recovered = Mathf.RoundToInt((100 - employee.energy) * recoveryFraction);
         employee.energy = employee.energy + recovered;
@@ -71,5 +71,29 @@ public class GameState
     public int WeekNumber()
     {
         return (dayNumber - 1) / 5 + 1;
+    }
+    
+    public void ApplyEffect(Effect effect)
+    {
+        if (effect.affects == StatType.Career)
+        {
+            employee.career += effect.amount;
+        }
+        else if (effect.affects == StatType.Energy)
+        {
+            employee.energy += effect.amount;
+            employee.energy = Mathf.Clamp(employee.energy, 0, 100);
+        }
+        else if (effect.affects == StatType.CoworkerRelationship)
+        {
+            ChangeRelationship(effect.targetCoworker, effect.amount);
+        }
+        else // Relationships — everyone
+        {
+            // copy the keys first: ChangeRelationship modifies the dictionary
+            List<CoworkerDefinition> keys = new List<CoworkerDefinition>(relationships.Keys);
+            foreach (CoworkerDefinition c in keys)
+                ChangeRelationship(c, effect.amount);
+        }
     }
 }
