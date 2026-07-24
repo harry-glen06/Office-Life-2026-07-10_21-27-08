@@ -59,6 +59,8 @@ public class DayUI : MonoBehaviour
     private DaySimulation simulation;
     private float secondsAccumulator = 0f;
     private bool isPaused = false;
+    
+    [SerializeField] private Animator playerAnimator;
 
     private Dictionary<CoworkerDefinition, Button> coworkerButtons = new Dictionary<CoworkerDefinition, Button>();
     private Dictionary<CoworkerDefinition, TextMeshProUGUI> relationshipRows = new Dictionary<CoworkerDefinition, TextMeshProUGUI>();
@@ -177,6 +179,9 @@ public class DayUI : MonoBehaviour
 
     void UpdateDisplay()
     {
+        Debug.Log($"{simulation.IsBusy} / {simulation.CurrentActivityName} / {simulation.CurrentPose}");
+        playerAnimator.SetInteger("pose", (int)simulation.CurrentPose);
+        
         UpdateBar(energyBarFill, simulation.Energy);
         UpdateBar(toiletBarFill, simulation.toilet);
 

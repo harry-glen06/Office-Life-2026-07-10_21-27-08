@@ -48,6 +48,8 @@ public class DaySimulation
     public int RemainingMinutes => remainingMinutes;
     public string CurrentActivityName => currentActivity != null ? currentActivity.activityName : "";
     
+    public CharacterPose CurrentPose => currentActivity != null ? currentActivity.pose : CharacterPose.Idle;
+    
     public int AverageRelationship => game.AverageLikability();
     
     public int toilet => game.employee.toilet;

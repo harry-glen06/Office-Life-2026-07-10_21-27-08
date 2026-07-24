@@ -10,6 +10,8 @@ public class ActivityDefinition : ScriptableObject
     public StatType affects;
     public int amount;
     public int toiletCost;
+    
+    public CharacterPose pose;
 
     public CoworkerDefinition targetCoworker;   // only used when affects == CoworkerRelationship
 
