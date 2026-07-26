@@ -48,6 +48,7 @@ public class DayUI : MonoBehaviour
     // ---------- Character ----------
     [Header("Character")]
     [SerializeField] private Animator playerAnimator;
+    [SerializeField] private Transform playerCharacter;
 
     // ---------- Day cycle & speed ----------
     [Header("Day cycle & speed")]
@@ -57,6 +58,7 @@ public class DayUI : MonoBehaviour
     [SerializeField] private Button fastButton;
     [SerializeField] private Button superButton;
     [SerializeField] private float secondsPerMinute = 1f;
+    [SerializeField] private float minutesPerUnit = 1f;
 
     // ---------- Runtime state ----------
     private GameState gameState;
@@ -69,6 +71,10 @@ public class DayUI : MonoBehaviour
 
     private Dictionary<CoworkerDefinition, Button> coworkerButtons = new Dictionary<CoworkerDefinition, Button>();
     private Dictionary<CoworkerDefinition, TextMeshProUGUI> relationshipRows = new Dictionary<CoworkerDefinition, TextMeshProUGUI>();
+    
+    private Transform walkTarget;
+    private int totalTravelMinutes;
+    private Vector3 walkStart;
 
 
     // =====================================================================
@@ -133,6 +139,17 @@ public class DayUI : MonoBehaviour
     void Update()
     {
         HandleWorldClicks();
+        
+        if (simulation.IsTravelling && walkTarget != null)
+        {
+            float smoothProgress = simulation.TravelProgressSmoothed(secondsAccumulator / secondsPerMinute);
+            playerCharacter.position = Vector3.Lerp(walkStart, walkTarget.position, smoothProgress);
+
+            Vector3 dir = walkTarget.position - playerCharacter.position;
+            dir.y = 0;
+            if (dir != Vector3.zero)
+                playerCharacter.rotation = Quaternion.LookRotation(dir);
+        }
 
         // failure messages fade out in real time, even while paused
         if (failureTimer > 0f)
@@ -165,11 +182,20 @@ public class DayUI : MonoBehaviour
 
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (!Physics.Raycast(ray, out RaycastHit hit)) return;
-
+        
         ClickableObject clickable = hit.collider.GetComponentInParent<ClickableObject>();
         if (clickable != null)
         {
-            ReportResult(simulation.DoActivity(clickable.activity));
+            float distance = Vector3.Distance(playerCharacter.position, clickable.standPoint.position);
+            int travelMinutes = Mathf.Max(1, Mathf.RoundToInt(distance * minutesPerUnit));
+
+            ActivityResult result = simulation.StartTravel(clickable.activity, travelMinutes);
+            if (result == ActivityResult.Started)
+            {
+                walkTarget = clickable.standPoint;
+                walkStart = playerCharacter.position;
+            }
+            ReportResult(result);
             UpdateDisplay();
         }
     }
@@ -208,6 +234,11 @@ public class DayUI : MonoBehaviour
             actionText.text = "Day over, go home";
             SetActionButtonsInteractable(false);
             goHomeButton.gameObject.SetActive(true);
+        }
+        else if (simulation.IsTravelling)
+        {
+            actionText.text = "Walking...";
+            SetActionButtonsInteractable(false);
         }
         else if (simulation.IsBusy)
         {

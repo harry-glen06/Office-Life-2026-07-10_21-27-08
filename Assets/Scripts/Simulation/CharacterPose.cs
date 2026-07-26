@@ -1,1 +1,1 @@
-public enum CharacterPose { Idle, Working, Talking, Drinking, Toilet}
+public enum CharacterPose { Idle, Working, Talking, Drinking, Toilet, Walking}

@@ -12,7 +12,7 @@ public class DaySimulation
 
     private const float ToiletDrainPerMinute = 0.3f;
 
-    public enum DayState { Idle, Busy }
+    public enum DayState { Idle, Busy, Travelling }
 
     // ---------- Day-scoped state ----------
     private GameState game;              // the persistent state this day belongs to
@@ -22,6 +22,10 @@ public class DaySimulation
     private DayState state = DayState.Idle;
     private ActivityDefinition currentActivity;
     private int remainingMinutes;
+    
+    private ActivityDefinition queuedActivity;   // what we're walking toward
+    private int travelMinutesLeft;
+    private int totalTravelMinutes;
 
     private float energyAccumulator = 0f;
     private float gainAccumulator = 0f;
@@ -62,7 +66,30 @@ public class DaySimulation
     public bool IsBusy => state == DayState.Busy;
     public int RemainingMinutes => remainingMinutes;
     public string CurrentActivityName => currentActivity != null ? currentActivity.activityName : "";
-    public CharacterPose CurrentPose => currentActivity != null ? currentActivity.pose : CharacterPose.Idle;
+    public CharacterPose CurrentPose
+    {
+        get
+        {
+            if (state == DayState.Travelling) return CharacterPose.Walking;
+            return currentActivity != null ? currentActivity.pose : CharacterPose.Idle;
+        }
+    }
+
+    public bool IsTravelling => state == DayState.Travelling;
+    public float TravelProgress
+    {
+        get
+        {
+            if (totalTravelMinutes <= 0) return 1f;
+            return 1f - ((float)travelMinutesLeft / totalTravelMinutes);
+        }
+    }
+    public float TravelProgressSmoothed(float fractionIntoTick)
+    {
+        if (totalTravelMinutes <= 0) return 1f;
+        float minutesElapsed = (totalTravelMinutes - travelMinutesLeft) + fractionIntoTick;
+        return Mathf.Clamp01(minutesElapsed / totalTravelMinutes);
+    }
 
 
     // =====================================================================
@@ -85,6 +112,32 @@ public class DaySimulation
         gainAccumulator = 0f;
         activityToiletAccumulator = 0f;
         return ActivityResult.Started;
+    }
+    
+    public ActivityResult StartTravel(ActivityDefinition activity, int travelMinutes)
+    {
+        if (activity == null) return ActivityResult.DayOver;
+        if (dayOver) return ActivityResult.DayOver;
+        if (state != DayState.Idle) return ActivityResult.AlreadyBusy;   // busy OR travelling
+        if (!activity.HasEnoughTime(clock)) return ActivityResult.NotEnoughTime;
+        if (!activity.HasEnoughEnergy(game.employee)) return ActivityResult.TooTired;
+
+        state = DayState.Travelling;
+        queuedActivity = activity;
+        travelMinutesLeft = travelMinutes;
+        totalTravelMinutes = travelMinutes;
+        return ActivityResult.Started;
+    }
+    
+    void ArriveAndStart()
+    {
+        state = DayState.Busy;
+        currentActivity = queuedActivity;
+        queuedActivity = null;
+        remainingMinutes = currentActivity.timeCost;
+        energyAccumulator = 0f;
+        gainAccumulator = 0f;
+        activityToiletAccumulator = 0f;
     }
 
     // Used by the UI to grey out buttons.
@@ -119,7 +172,13 @@ public class DaySimulation
         CheckScheduledEvent();
         CheckTriggerEvents();
 
-        if (state == DayState.Busy)
+        if (state == DayState.Travelling)
+        {
+            travelMinutesLeft -= 1;
+            if (travelMinutesLeft <= 0)
+                ArriveAndStart();
+        }
+        else if (state == DayState.Busy)
         {
             currentActivity.AdvanceOneMinute(game, ref energyAccumulator, ref gainAccumulator, ref activityToiletAccumulator);
 
