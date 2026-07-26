@@ -2895,6 +2895,8 @@ MonoBehaviour:
   eventText: {fileID: 1614959081}
   choiceContainer: {fileID: 1459821844}
   choiceButtonPrefab: {fileID: 7407189935051398114, guid: d4be1101616d74eb58d498c249556630, type: 3}
+  audioSource: {fileID: 766672149}
+  eventChime: {fileID: 8300000, guid: 06acfd3571877482e817a6875937b1ba, type: 3}
 --- !u!82 &766672148
 AudioSource:
   m_ObjectHideFlags: 0
