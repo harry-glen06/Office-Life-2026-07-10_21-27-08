@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 public class DayUI : MonoBehaviour
 {
-    // Pairing buttons to activities is a UI concern — stays here.
+    // Pairing buttons to activities is a UI concern, stays here.
     [System.Serializable]
     public class ActivitySlot
     {
@@ -49,6 +49,7 @@ public class DayUI : MonoBehaviour
     [Header("Character")]
     [SerializeField] private Animator playerAnimator;
     [SerializeField] private Transform playerCharacter;
+    [SerializeField] private Transform dayStartPoint;
 
     // ---------- Day cycle & speed ----------
     [Header("Day cycle & speed")]
@@ -149,6 +150,12 @@ public class DayUI : MonoBehaviour
             dir.y = 0;
             if (dir != Vector3.zero)
                 playerCharacter.rotation = Quaternion.LookRotation(dir);
+        }
+        else if (!simulation.IsTravelling && walkTarget != null)
+        {
+            // just arrived, face the way the stand-point points
+            playerCharacter.rotation = walkTarget.rotation; 
+            walkTarget = null;
         }
 
         // failure messages fade out in real time, even while paused
@@ -296,7 +303,7 @@ public class DayUI : MonoBehaviour
             slot.button.interactable = on;
     }
 
-    // Pure display formatting — correctly a UI concern.
+    // Pure display formatting, correctly a UI concern.
     string FormatTime(int minutes)
     {
         int hours = minutes / 60;
@@ -414,6 +421,9 @@ public class DayUI : MonoBehaviour
         gameState.RecoverOvernight();
 
         StartNewDay();
+        playerCharacter.position = dayStartPoint.position;
+        playerCharacter.rotation = dayStartPoint.rotation;
+        walkTarget = null;   // cancel any leftover walk state
 
         goHomeButton.gameObject.SetActive(false);
         isPaused = false;
