@@ -60,6 +60,18 @@ public class DayUI : MonoBehaviour
     [SerializeField] private Button superButton;
     [SerializeField] private float secondsPerMinute = 1f;
     [SerializeField] private float minutesPerUnit = 1f;
+    
+    // ---------- sound ----------
+    [Header("Sound")]
+    [SerializeField] private AudioSource loopSource;      // for working/coffee/toilet
+    [SerializeField] private AudioSource oneShotSource;   // for talking, events
+    [SerializeField] private AudioSource talkSource;
+    [SerializeField] private AudioClip workingLoop;
+    [SerializeField] private AudioClip coffeeLoop;
+    [SerializeField] private AudioClip toiletLoop;
+    [SerializeField] private AudioClip[] talkingClips;    // three, picked at random
+
+    private CharacterPose lastPose = CharacterPose.Idle;
 
     // ---------- Runtime state ----------
     private GameState gameState;
@@ -193,6 +205,8 @@ public class DayUI : MonoBehaviour
         ClickableObject clickable = hit.collider.GetComponentInParent<ClickableObject>();
         if (clickable != null)
         {
+            if (clickable.standPoint == null) return;
+            
             float distance = Vector3.Distance(playerCharacter.position, clickable.standPoint.position);
             int travelMinutes = Mathf.Max(1, Mathf.RoundToInt(distance * minutesPerUnit));
 
@@ -221,6 +235,8 @@ public class DayUI : MonoBehaviour
 
     void UpdateDisplay()
     {
+        UpdateAudio();
+        
         playerAnimator.SetInteger("pose", (int)simulation.CurrentPose);
         playerAnimator.SetBool("isTired", simulation.Energy < 30);
 
@@ -264,6 +280,38 @@ public class DayUI : MonoBehaviour
         // a recent failure overrides whatever the state text would have been
         if (failureTimer > 0f)
             actionText.text = failureMessage;
+    }
+    
+    void UpdateAudio()
+    {
+        CharacterPose pose = simulation.CurrentPose;
+        if (pose == lastPose) return;   // only act on change
+        lastPose = pose;
+
+        // stop any loop when leaving a looping activity
+        loopSource.Stop();
+        talkSource.Stop(); 
+
+        if (pose == CharacterPose.Working)
+        {
+            loopSource.clip = workingLoop;
+            loopSource.Play();
+        }
+        else if (pose == CharacterPose.Drinking)
+        {
+            loopSource.clip = coffeeLoop;
+            loopSource.Play();
+        }
+        else if (pose == CharacterPose.Toilet)
+        {
+            loopSource.clip = toiletLoop;
+            loopSource.Play();
+        }
+        else if (pose == CharacterPose.Talking)
+        {
+            talkSource.clip = talkingClips[Random.Range(0, talkingClips.Length)];
+            talkSource.Play();
+        }
     }
 
     // Turns a refused action into something the player can read.

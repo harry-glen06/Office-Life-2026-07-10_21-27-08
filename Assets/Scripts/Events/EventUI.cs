@@ -10,6 +10,8 @@ public class EventUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI eventText;
     [SerializeField] private Transform choiceContainer;
     [SerializeField] private GameObject choiceButtonPrefab;
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip eventChime;
 
     private GameState game;
 
@@ -27,6 +29,8 @@ public class EventUI : MonoBehaviour
         eventBackdrop.transform.SetAsLastSibling();   // draw on top of everything
         eventBackdrop.SetActive(true);
         eventText.text = ev.title + "\n\n" + ev.description;
+        
+        audioSource.PlayOneShot(eventChime);
 
         // clear old choice buttons (events have different choices)
         foreach (Transform child in choiceContainer)
