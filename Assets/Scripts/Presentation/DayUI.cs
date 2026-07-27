@@ -26,6 +26,22 @@ public class DayUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI careerText;
     [SerializeField] private Image energyBarFill;
     [SerializeField] private Image toiletBarFill;
+    
+    // ---------- Skills -------
+    [Header("Skills")]
+    [SerializeField] private GameObject skillPanel;
+    [SerializeField] private Transform computerStandPoint;
+    [SerializeField] private Button workButton;
+    [SerializeField] private Button programmingButton;
+    [SerializeField] private Button writingButton;
+    [SerializeField] private Button adminButton;
+    [SerializeField] private Button scienceButton;
+
+    [SerializeField] private ActivityDefinition workActivity;
+    [SerializeField] private ActivityDefinition programmingActivity;
+    [SerializeField] private ActivityDefinition writingActivity;
+    [SerializeField] private ActivityDefinition adminActivity;
+    [SerializeField] private ActivityDefinition scienceActivity;
 
     // ---------- Coworker panel ----------
     [Header("Coworker panel")]
@@ -113,6 +129,12 @@ public class DayUI : MonoBehaviour
         coworkerPanel.SetActive(false);
         relationshipPanel.SetActive(false);
         goHomeButton.gameObject.SetActive(false);
+        
+        workButton.onClick.AddListener(() => OnSkillChosen(workActivity));
+        programmingButton.onClick.AddListener(() => OnSkillChosen(programmingActivity));
+        writingButton.onClick.AddListener(() => OnSkillChosen(writingActivity));
+        adminButton.onClick.AddListener(() => OnSkillChosen(adminActivity));
+        scienceButton.onClick.AddListener(() => OnSkillChosen(scienceActivity));
 
         UpdateSpeedButtons(playButton);
         UpdateDisplay();
@@ -206,6 +228,13 @@ public class DayUI : MonoBehaviour
         ClickableObject clickable = hit.collider.GetComponentInParent<ClickableObject>();
         if (clickable != null)
         {
+            if (clickable.opensSkillMenu)
+            {
+                skillPanel.SetActive(true);
+                isPaused = true;
+                return;
+            }
+            
             if (clickable.standPoint == null) return;
             
             float distance = Vector3.Distance(playerCharacter.position, clickable.standPoint.position);
@@ -426,6 +455,23 @@ public class DayUI : MonoBehaviour
         coworkerPanel.SetActive(false);
         isPaused = false;
         UpdateDisplay();
+    }
+    
+    void OnSkillChosen(ActivityDefinition activity)
+    {
+        skillPanel.SetActive(false);
+        isPaused = false;
+
+        float distance = Vector3.Distance(playerCharacter.position, computerStandPoint.position);
+        int travelMinutes = Mathf.Max(1, Mathf.RoundToInt(distance * minutesPerUnit));
+
+        ActivityResult result = simulation.StartTravel(activity, travelMinutes);
+        if (result == ActivityResult.Started)
+        {
+            walkTarget = computerStandPoint;
+            walkStart = playerCharacter.position;
+        }
+        ReportResult(result);
     }
 
     void OnCancelClicked()

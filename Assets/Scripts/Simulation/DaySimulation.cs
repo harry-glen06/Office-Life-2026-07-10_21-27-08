@@ -104,7 +104,7 @@ public class DaySimulation
         if (state == DayState.Busy) return ActivityResult.AlreadyBusy;
         if (!activity.HasEnoughTime(clock)) return ActivityResult.NotEnoughTime;
         if (!activity.HasEnoughEnergy(game.employee)) return ActivityResult.TooTired;
-
+        
         state = DayState.Busy;
         currentActivity = activity;
         remainingMinutes = activity.timeCost;

@@ -16,6 +16,9 @@ public class ActivityDefinition : ScriptableObject
     public int amount;
 
     public CharacterPose pose;  // what the character does while performing this
+    
+    public bool buildsSkill;
+    public SkillType skillToBuild;
 
 
     // =====================================================================
@@ -108,6 +111,12 @@ public class ActivityDefinition : ScriptableObject
 
     void ApplyGain(GameState game)
     {
+        if (buildsSkill)
+        {
+            game.ChangeSkill(skillToBuild, 1);
+            return;
+        }
+        
         if (affects == StatType.Career)
         {
             game.employee.career += 1;

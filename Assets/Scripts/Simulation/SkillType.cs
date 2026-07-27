@@ -1,0 +1,1 @@
+public enum SkillType { Charisma, Programming, Writing, Administration, Science }

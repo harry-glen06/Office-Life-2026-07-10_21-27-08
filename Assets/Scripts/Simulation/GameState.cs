@@ -6,7 +6,7 @@ public class GameState
 {
     public Employee employee = new Employee();
     public int dayNumber = 1;
-
+    
     // Each coworker → your current relationship with them.
     public Dictionary<CoworkerDefinition, int> relationships = new Dictionary<CoworkerDefinition, int>();
     
@@ -37,6 +37,9 @@ public class GameState
         foreach (CoworkerDefinition c in coworkers)
             relationships[c] = c.startingRelationship;   // seed each at their start value
     }
+    
+    public int GetSkill(SkillType type) => employee.GetSkill(type);
+    public void ChangeSkill(SkillType type, int amount) => employee.ChangeSkill(type, amount);
     
     public int GetRelationship(CoworkerDefinition c)
     {

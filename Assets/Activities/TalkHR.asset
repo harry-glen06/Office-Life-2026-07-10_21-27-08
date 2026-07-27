@@ -15,8 +15,10 @@ MonoBehaviour:
   activityName: Talking to HR
   timeCost: 40
   energyCost: 18
-  affects: 2
-  amount: 2
   toiletCost: 0
-  pose: 2
+  affects: 2
   targetCoworker: {fileID: 11400000, guid: 4f127d60e7d254595ac87664cec39f2f, type: 2}
+  amount: 2
+  pose: 2
+  buildsSkill: 1
+  skillToBuild: 0

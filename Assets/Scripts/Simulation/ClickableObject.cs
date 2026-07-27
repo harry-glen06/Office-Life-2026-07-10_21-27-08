@@ -4,4 +4,5 @@ public class ClickableObject : MonoBehaviour
 {
     public ActivityDefinition activity;   // what clicking this does (Work, Coffee...)
     public Transform standPoint;
+    public bool opensSkillMenu;
 }

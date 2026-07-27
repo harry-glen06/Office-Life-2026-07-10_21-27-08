@@ -15,8 +15,10 @@ MonoBehaviour:
   activityName: Socialising
   timeCost: 60
   energyCost: 30
-  affects: 1
-  amount: 3
   toiletCost: 0
-  pose: 2
+  affects: 1
   targetCoworker: {fileID: 0}
+  amount: 3
+  pose: 2
+  buildsSkill: 1
+  skillToBuild: 0
