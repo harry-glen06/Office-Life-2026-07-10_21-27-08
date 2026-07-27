@@ -39,6 +39,10 @@ public class GameState
     }
     
     public int GetSkill(SkillType type) => employee.GetSkill(type);
+    public int GetSkillLevel(SkillType type)
+    {
+        return GetSkill(type) / 30;   // 30 points per level
+    }
     public void ChangeSkill(SkillType type, int amount) => employee.ChangeSkill(type, amount);
     
     public int GetRelationship(CoworkerDefinition c)

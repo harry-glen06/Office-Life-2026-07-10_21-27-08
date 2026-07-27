@@ -19,6 +19,7 @@ public class ActivityDefinition : ScriptableObject
     
     public bool buildsSkill;
     public SkillType skillToBuild;
+    public bool adminImproves;
 
 
     // =====================================================================
@@ -49,6 +50,14 @@ public class ActivityDefinition : ScriptableObject
     public void AdvanceOneMinute(GameState game, ref float energyAccumulator, ref float gainAccumulator, ref float toiletAccumulator)
     {
         float effectiveness = Effectiveness(game);
+        float energyCostToApply = energyCost;
+        float toiletCostToApply = toiletCost;
+
+        if (adminImproves && game.GetSkillLevel(SkillType.Administration) >= 5)
+        {
+            energyCostToApply *= 1.3f;   // more restore (energyCost is negative for coffee)
+            toiletCostToApply *= 0.7f;   // less drain
+        }
 
         // --- ENERGY: add this minute's slice, then apply whole points ---
         energyAccumulator += (float)energyCost / timeCost;
@@ -79,12 +88,21 @@ public class ActivityDefinition : ScriptableObject
         game.employee.toilet = Mathf.Clamp(game.employee.toilet, 0, 100);
 
         // --- GAIN: scaled by how effective you are right now ---
-        gainAccumulator += ((float)amount / timeCost) * effectiveness;
+        float charismaBonus = 1f;
+        if (affects == StatType.CoworkerRelationship || affects == StatType.Relationships)
+            charismaBonus = 1f + game.GetSkillLevel(SkillType.Charisma) * 0.1f;
+        
+        float workBonus = 1f;
+        if (affects == StatType.Career && game.GetSkillLevel(SkillType.Programming) >= 5)
+            workBonus = 1.5f;   // 50% faster work once programming hits 5
+
+        gainAccumulator += ((float)amount / timeCost) * effectiveness * charismaBonus * workBonus;
         while (gainAccumulator >= 1f)
         {
             gainAccumulator -= 1f;
             ApplyGain(game);
         }
+        
     }
 
     // Tired hurts across a wide range; a full bladder only bites at the end.
@@ -124,6 +142,7 @@ public class ActivityDefinition : ScriptableObject
         else if (affects == StatType.CoworkerRelationship)
         {
             game.ChangeRelationship(targetCoworker, 1);
+            game.ChangeSkill(SkillType.Charisma, 1);
         }
         else if (affects == StatType.Relationships)
         {
