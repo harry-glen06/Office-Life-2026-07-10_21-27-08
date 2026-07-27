@@ -20,6 +20,9 @@ MonoBehaviour:
     - affects: 1
       targetCoworker: {fileID: 0}
       amount: -1
+    - affects: 4
+      targetCoworker: {fileID: 0}
+      amount: 100
   requiredDay: 0
   requiredTime: 0
   chance: 0

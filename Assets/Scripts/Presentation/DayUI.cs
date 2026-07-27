@@ -60,6 +60,7 @@ public class DayUI : MonoBehaviour
     [SerializeField] private Button superButton;
     [SerializeField] private float secondsPerMinute = 1f;
     [SerializeField] private float minutesPerUnit = 1f;
+    [SerializeField] private SunController sun;
     
     // ---------- sound ----------
     [Header("Sound")]
@@ -236,6 +237,9 @@ public class DayUI : MonoBehaviour
     void UpdateDisplay()
     {
         UpdateAudio();
+        
+        float dayProgress = (simulation.Clock - 540f) / (1020f - 540f);
+        sun.SetDayProgress(dayProgress);
         
         playerAnimator.SetInteger("pose", (int)simulation.CurrentPose);
         playerAnimator.SetBool("isTired", simulation.Energy < 30);
