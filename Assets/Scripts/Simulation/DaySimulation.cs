@@ -245,11 +245,13 @@ public class DaySimulation
         foreach (EventDefinition ev in triggerEvents)
         {
             if (firedTriggersToday.Contains(ev)) continue;
+            if (ev.requiredDay != DayRequirement.Any && ev.requiredDay.ToString() != game.DayName())
+                continue;
             if (!MeetsAllConditions(ev)) continue;
 
             firedTriggersToday.Add(ev);
             pendingEvent = ev;
-            return;   // one at a time — pendingEvent is a single slot
+            return;
         }
     }
 

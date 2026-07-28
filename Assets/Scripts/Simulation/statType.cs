@@ -4,5 +4,6 @@ public enum StatType
     Relationships,
     CoworkerRelationship,
     Energy,
-    Toilet
+    Toilet,
+    None
 }

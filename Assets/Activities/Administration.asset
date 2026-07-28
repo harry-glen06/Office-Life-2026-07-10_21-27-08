@@ -18,7 +18,8 @@ MonoBehaviour:
   toiletCost: 0
   affects: 0
   targetCoworker: {fileID: 0}
-  amount: 0
+  amount: 3
   pose: 1
   buildsSkill: 1
   skillToBuild: 3
+  adminImproves: 0

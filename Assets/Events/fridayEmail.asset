@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc484765d5d9946c0bb071943efa4cd4, type: 3}
+  m_Name: fridayEmail
+  m_EditorClassIdentifier: Assembly-CSharp::EventDefinition
+  title: Happy Friday
+  description: Send everyone a summary of the week, and a nice little mesage atttached.
+  choices:
+  - label: Send!
+    effects:
+    - affects: 0
+      targetCoworker: {fileID: 0}
+      amount: 2
+    - affects: 1
+      targetCoworker: {fileID: 0}
+      amount: 1
+  requiredDay: 5
+  requiredTime: 1
+  chance: 1
+  conditions:
+  - stat: 1
+    mustBeBelow: 0
+    threshold: 30
+    targetCoworker: {fileID: 0}
+    checksSkill: 0
+    skill: 0
+  - stat: 5
+    mustBeBelow: 0
+    threshold: 4
+    targetCoworker: {fileID: 0}
+    checksSkill: 1
+    skill: 2

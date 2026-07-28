@@ -115,6 +115,10 @@ public class DayUI : MonoBehaviour
     {
         gameState = new GameState();
         gameState.InitCoworkers(coworkers);
+        
+        // TEMP debug 
+        gameState.employee.ChangeSkill(SkillType.Writing, 150);
+        foreach (var c in coworkers) gameState.ChangeRelationship(c, 40);
 
         eventUI.Init(gameState);
         eventUI.onEventClosed = OnEventClosed;

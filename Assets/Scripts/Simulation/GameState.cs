@@ -98,7 +98,7 @@ public class GameState
         else if (effect.affects == StatType.Toilet)
         {
             employee.toilet += effect.amount;
-            employee.energy = Mathf.Clamp(employee.energy, 0, 100);
+            employee.toilet = Mathf.Clamp(employee.toilet, 0, 100);
         }
         else if (effect.affects == StatType.Relationships) // Relationships — everyone
         {
@@ -107,12 +107,17 @@ public class GameState
             foreach (CoworkerDefinition c in keys)
                 ChangeRelationship(c, effect.amount);
         }
+        else if (effect.affects == StatType.None){}
     }
     public bool MeetsCondition(StatCondition c)
     {
+        if (!c.checksSkill && c.stat == StatType.None)
+            return true;   // checks nothing, treat as satisfied
+        
         int value;
-
-        if (c.stat == StatType.Career)
+        if (c.checksSkill)
+            value = GetSkillLevel(c.skill);
+        else if (c.stat == StatType.Career)
             value = employee.career;
         else if (c.stat == StatType.Energy)
             value = employee.energy;

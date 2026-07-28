@@ -95,8 +95,12 @@ public class ActivityDefinition : ScriptableObject
         float workBonus = 1f;
         if (affects == StatType.Career && game.GetSkillLevel(SkillType.Programming) >= 5)
             workBonus = 1.5f;   // 50% faster work once programming hits 5
+        
+        float scienceBonus = 1f;
+        if (buildsSkill && game.GetSkillLevel(SkillType.Science) >= 7)
+            scienceBonus = 1.5f;   // all skills build 50% faster
 
-        gainAccumulator += ((float)amount / timeCost) * effectiveness * charismaBonus * workBonus;
+        gainAccumulator += ((float)amount / timeCost) * effectiveness * charismaBonus * workBonus * scienceBonus;
         while (gainAccumulator >= 1f)
         {
             gainAccumulator -= 1f;
@@ -129,6 +133,14 @@ public class ActivityDefinition : ScriptableObject
 
     void ApplyGain(GameState game)
     {
+        if (buildsSkill && skillToBuild == SkillType.Writing)
+        {
+            game.ChangeSkill(SkillType.Writing, 1);
+            if (game.GetSkill(SkillType.Writing) % 3 == 0)
+                game.ChangeSkill(SkillType.Charisma, 1);   // trickle, 1 per 3 writing
+            return;
+        }
+        
         if (buildsSkill)
         {
             game.ChangeSkill(skillToBuild, 1);
@@ -151,6 +163,7 @@ public class ActivityDefinition : ScriptableObject
             foreach (CoworkerDefinition c in keys)
                 game.ChangeRelationship(c, 1);
         }
-        // Energy and Toilet aren't gains — they're handled by energyCost / toiletCost above.
+        else if (affects == StatType.None) {}
+        // Energy and Toilet aren't gains, they're handled by energyCost / toiletCost above.
     }
 }

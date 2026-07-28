@@ -12,13 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5e29ee42a94a4055b12753fde7f583a, type: 3}
   m_Name: Programming
   m_EditorClassIdentifier: Assembly-CSharp::ActivityDefinition
-  activityName: Learning about science
+  activityName: Practing progamming
   timeCost: 60
   energyCost: 20
   toiletCost: 0
   affects: 0
   targetCoworker: {fileID: 0}
-  amount: 0
+  amount: 3
   pose: 1
   buildsSkill: 1
-  skillToBuild: 4
+  skillToBuild: 1
+  adminImproves: 0
