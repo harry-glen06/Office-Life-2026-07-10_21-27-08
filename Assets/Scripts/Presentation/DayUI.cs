@@ -147,7 +147,7 @@ public class DayUI : MonoBehaviour
         
         foreach (SkillType type in System.Enum.GetValues(typeof(SkillType)))
             lastSkillLevels[type] = gameState.GetSkillLevel(type);
-
+    
         UpdateSpeedButtons(playButton);
         UpdateDisplay();
     }
@@ -322,22 +322,29 @@ public class DayUI : MonoBehaviour
 
         if (simulation.IsDayOver)
         {
+            actionText.color = Color.white;
             actionText.text = "Day over, go home";
             SetActionButtonsInteractable(false);
             goHomeButton.gameObject.SetActive(true);
         }
         else if (simulation.IsTravelling)
         {
+            actionText.color = Color.white;
             actionText.text = "Walking...";
             SetActionButtonsInteractable(false);
         }
         else if (simulation.IsBusy)
         {
-            actionText.text = $"{simulation.CurrentActivityName} ({simulation.RemainingMinutes} min left)";
-            SetActionButtonsInteractable(false);
+            int pct = Mathf.RoundToInt(simulation.CurrentEfficiency * 100f);
+            actionText.text = $"{simulation.CurrentActivityName} ({simulation.RemainingMinutes} min left) — {pct}%";
+
+            if (pct >= 90) actionText.color = Color.green;
+            else if (pct >= 60) actionText.color = new Color(1f, 0.6f, 0f);
+            else actionText.color = Color.red;
         }
         else
         {
+            actionText.color = Color.white;
             // Idle: nothing in progress, enable whatever is affordable.
             actionText.text = "";
             socialiseButton.interactable = true;
@@ -347,7 +354,10 @@ public class DayUI : MonoBehaviour
 
         // a recent failure overrides whatever the state text would have been
         if (failureTimer > 0f)
+        {
+            actionText.color = Color.white;
             actionText.text = failureMessage;
+        }
     }
     
     void UpdateAudio()

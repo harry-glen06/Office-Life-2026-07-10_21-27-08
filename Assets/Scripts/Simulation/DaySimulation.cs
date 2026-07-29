@@ -120,6 +120,15 @@ public class DaySimulation
             return game.GetSkillLevel(currentActivity.skillToBuild) + 1;   // the level you're climbing toward
         }
     }
+    
+    public float CurrentEfficiency
+    {
+        get
+        {
+            if (currentActivity == null) return 1f;
+            return currentActivity.EfficiencyFor(game);
+        }
+    }
 
     // =====================================================================
     // Activities
