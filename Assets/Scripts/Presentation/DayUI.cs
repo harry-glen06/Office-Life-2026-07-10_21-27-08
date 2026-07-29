@@ -26,6 +26,9 @@ public class DayUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI careerText;
     [SerializeField] private Image energyBarFill;
     [SerializeField] private Image toiletBarFill;
+    [SerializeField] private GameObject skillProgressBar;   // the whole bar object
+    [SerializeField] private Image skillProgressFill;
+    [SerializeField] private TextMeshProUGUI skillProgressLabel;
     
     // ---------- Skills -------
     [Header("Skills")]
@@ -115,10 +118,6 @@ public class DayUI : MonoBehaviour
     {
         gameState = new GameState();
         gameState.InitCoworkers(coworkers);
-        
-        // TEMP debug 
-        gameState.employee.ChangeSkill(SkillType.Writing, 150);
-        foreach (var c in coworkers) gameState.ChangeRelationship(c, 40);
 
         eventUI.Init(gameState);
         eventUI.onEventClosed = OnEventClosed;
@@ -288,6 +287,17 @@ public class DayUI : MonoBehaviour
         // keep the dropdown live while it's open
         if (relationshipPanel.activeSelf)
             RefreshRelationshipRows();
+        
+        if (simulation.IsBuildingSkill)
+        {
+            skillProgressBar.SetActive(true);
+            skillProgressFill.fillAmount = simulation.CurrentSkillProgress;
+            skillProgressLabel.text = $"{simulation.CurrentSkillName} → Level {simulation.CurrentSkillTargetLevel}";
+        }
+        else
+        {
+            skillProgressBar.SetActive(false);
+        }
 
         if (simulation.IsDayOver)
         {

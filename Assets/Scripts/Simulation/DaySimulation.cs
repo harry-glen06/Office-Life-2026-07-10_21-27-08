@@ -66,6 +66,9 @@ public class DaySimulation
     public bool IsBusy => state == DayState.Busy;
     public int RemainingMinutes => remainingMinutes;
     public string CurrentActivityName => currentActivity != null ? currentActivity.activityName : "";
+    
+    public bool IsBuildingSkill => currentActivity != null && currentActivity.buildsSkill;
+
     public CharacterPose CurrentPose
     {
         get
@@ -90,7 +93,33 @@ public class DaySimulation
         float minutesElapsed = (totalTravelMinutes - travelMinutesLeft) + fractionIntoTick;
         return Mathf.Clamp01(minutesElapsed / totalTravelMinutes);
     }
+    
+    public float CurrentSkillProgress
+    {
+        get
+        {
+            if (currentActivity == null || !currentActivity.buildsSkill) return 0f;
+            int points = game.GetSkill(currentActivity.skillToBuild);
+            return (points % 30) / 30f;   // fraction into current level
+        }
+    }
+    public string CurrentSkillName
+    {
+        get
+        {
+            if (currentActivity == null || !currentActivity.buildsSkill) return "";
+            return currentActivity.skillToBuild.ToString();
+        }
+    }
 
+    public int CurrentSkillTargetLevel
+    {
+        get
+        {
+            if (currentActivity == null || !currentActivity.buildsSkill) return 0;
+            return game.GetSkillLevel(currentActivity.skillToBuild) + 1;   // the level you're climbing toward
+        }
+    }
 
     // =====================================================================
     // Activities
