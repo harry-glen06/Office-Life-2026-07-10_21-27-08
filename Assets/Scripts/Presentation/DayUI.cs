@@ -29,6 +29,8 @@ public class DayUI : MonoBehaviour
     [SerializeField] private GameObject skillProgressBar;   // the whole bar object
     [SerializeField] private Image skillProgressFill;
     [SerializeField] private TextMeshProUGUI skillProgressLabel;
+    [SerializeField] private TextMeshProUGUI levelUpText;
+    [SerializeField] private AudioClip levelUpChime;
     
     // ---------- Skills -------
     [Header("Skills")]
@@ -108,6 +110,10 @@ public class DayUI : MonoBehaviour
     private Transform walkTarget;
     private int totalTravelMinutes;
     private Vector3 walkStart;
+    
+    private Dictionary<SkillType, int> lastSkillLevels = new Dictionary<SkillType, int>();
+    private string levelUpMessage = "";
+    private float levelUpTimer = 0f;
 
 
     // =====================================================================
@@ -138,6 +144,9 @@ public class DayUI : MonoBehaviour
         writingButton.onClick.AddListener(() => OnSkillChosen(writingActivity));
         adminButton.onClick.AddListener(() => OnSkillChosen(adminActivity));
         scienceButton.onClick.AddListener(() => OnSkillChosen(scienceActivity));
+        
+        foreach (SkillType type in System.Enum.GetValues(typeof(SkillType)))
+            lastSkillLevels[type] = gameState.GetSkillLevel(type);
 
         UpdateSpeedButtons(playButton);
         UpdateDisplay();
@@ -202,6 +211,17 @@ public class DayUI : MonoBehaviour
 
         if (simulation.IsDayOver) return;
         if (isPaused) return;
+        
+        if (levelUpTimer > 0f)
+        {
+            levelUpTimer -= Time.deltaTime;
+            levelUpText.gameObject.SetActive(true);
+            levelUpText.text = levelUpMessage;
+        }
+        else
+        {
+            levelUpText.gameObject.SetActive(false);
+        }
 
         // Presentation concern: convert real seconds into ticks.
         secondsAccumulator += Time.deltaTime;
@@ -288,6 +308,7 @@ public class DayUI : MonoBehaviour
         if (relationshipPanel.activeSelf)
             RefreshRelationshipRows();
         
+        CheckSkillLevelUps();
         if (simulation.IsBuildingSkill)
         {
             skillProgressBar.SetActive(true);
@@ -486,6 +507,26 @@ public class DayUI : MonoBehaviour
             walkStart = playerCharacter.position;
         }
         ReportResult(result);
+    }
+    
+    void CheckSkillLevelUps()
+    {
+        foreach (SkillType type in System.Enum.GetValues(typeof(SkillType)))
+        {
+            int current = gameState.GetSkillLevel(type);
+            if (current > lastSkillLevels[type])
+            {
+                lastSkillLevels[type] = current;
+                OnSkillLevelUp(type, current);
+            }
+        }
+    }
+    
+    void OnSkillLevelUp(SkillType type, int newLevel)
+    {
+        levelUpMessage = $"{type} reached Level {newLevel}!";
+        levelUpTimer = 2.5f;
+        oneShotSource.PlayOneShot(levelUpChime);
     }
 
     void OnCancelClicked()
