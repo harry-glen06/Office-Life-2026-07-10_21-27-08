@@ -67,8 +67,6 @@ public class DaySimulation
     public int RemainingMinutes => remainingMinutes;
     public string CurrentActivityName => currentActivity != null ? currentActivity.activityName : "";
     
-    public bool IsBuildingSkill => currentActivity != null && currentActivity.buildsSkill;
-
     public CharacterPose CurrentPose
     {
         get
@@ -94,21 +92,41 @@ public class DaySimulation
         return Mathf.Clamp01(minutesElapsed / totalTravelMinutes);
     }
     
-    public float CurrentSkillProgress
+    // which skill is currently gaining, if any (null = none)
+    SkillType? BuildingWhichSkill()
     {
-        get
-        {
-            if (currentActivity == null || !currentActivity.buildsSkill) return 0f;
-            int points = game.GetSkill(currentActivity.skillToBuild);
-            return (points % 30) / 30f;   // fraction into current level
-        }
+        if (currentActivity == null) return null;
+
+        // a skill the activity explicitly builds takes priority for the bar
+        SkillType? built = currentActivity.FirstSkillBuilt();
+        if (built.HasValue) return built;
+
+        // social activities build charisma as a side effect
+        if (currentActivity.AffectsRelationships())
+            return SkillType.Charisma;
+
+        return null;
     }
+
+    public bool IsBuildingSkill => BuildingWhichSkill() != null;
+
     public string CurrentSkillName
     {
         get
         {
-            if (currentActivity == null || !currentActivity.buildsSkill) return "";
-            return currentActivity.skillToBuild.ToString();
+            SkillType? skill = BuildingWhichSkill();
+            return skill.HasValue ? skill.Value.ToString() : "";
+        }
+    }
+
+    public float CurrentSkillProgress
+    {
+        get
+        {
+            SkillType? skill = BuildingWhichSkill();
+            if (!skill.HasValue) return 0f;
+            int points = game.GetSkill(skill.Value);
+            return (points % 30) / 30f;
         }
     }
 
@@ -116,9 +134,31 @@ public class DaySimulation
     {
         get
         {
-            if (currentActivity == null || !currentActivity.buildsSkill) return 0;
-            return game.GetSkillLevel(currentActivity.skillToBuild) + 1;   // the level you're climbing toward
+            SkillType? skill = BuildingWhichSkill();
+            if (!skill.HasValue) return 0;
+            return game.GetSkillLevel(skill.Value) + 1;
         }
+    }
+    public List<SkillType> SkillsBeingBuilt()
+    {
+        List<SkillType> result = new List<SkillType>();
+        if (currentActivity == null) return result;
+
+        foreach (GainEffect g in currentActivity.gains)
+            if (g.isSkill && !result.Contains(g.skill))
+                result.Add(g.skill);
+
+        return result;
+    }
+    
+    public float SkillProgress(SkillType skill)
+    {
+        return (game.GetSkill(skill) % 30) / 30f;
+    }
+
+    public int SkillTargetLevel(SkillType skill)
+    {
+        return game.GetSkillLevel(skill) + 1;
     }
     
     public float CurrentEfficiency

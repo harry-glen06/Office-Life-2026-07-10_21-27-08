@@ -11,15 +11,13 @@ public class ActivityDefinition : ScriptableObject
     public int energyCost;      // + drains, - restores (coffee)
     public int toiletCost;      // + drains bladder, - restores (toilet)
 
-    public StatType affects;
-    public CoworkerDefinition targetCoworker;   // only used when affects == CoworkerRelationship
-    public int amount;
+    public int amount;          // gain-points produced over the activity's duration
 
     public CharacterPose pose;  // what the character does while performing this
+    public bool adminImproves;  // coffee gets better at admin level 5
 
-    public bool buildsSkill;
-    public SkillType skillToBuild;
-    public bool adminImproves;
+    // Everything this activity changes. One entry = one stat or skill nudge.
+    public List<GainEffect> gains = new List<GainEffect>();
 
 
     // =====================================================================
@@ -43,10 +41,45 @@ public class ActivityDefinition : ScriptableObject
 
 
     // =====================================================================
+    // Convenience: what KINDS of thing does this activity do?
+    // Used by efficiency multipliers and the skill-progress bar.
+    // =====================================================================
+
+    public bool BuildsAnySkill()
+    {
+        foreach (GainEffect g in gains)
+            if (g.isSkill) return true;
+        return false;
+    }
+
+    // The first skill this activity builds (for the progress bar), or null.
+    public SkillType? FirstSkillBuilt()
+    {
+        foreach (GainEffect g in gains)
+            if (g.isSkill) return g.skill;
+        return null;
+    }
+
+    public bool AffectsCareer()
+    {
+        foreach (GainEffect g in gains)
+            if (!g.isSkill && g.stat == StatType.Career) return true;
+        return false;
+    }
+
+    public bool AffectsRelationships()
+    {
+        foreach (GainEffect g in gains)
+            if (!g.isSkill && (g.stat == StatType.CoworkerRelationship || g.stat == StatType.Relationships))
+                return true;
+        return false;
+    }
+
+
+    // =====================================================================
     // One minute of this activity
     // =====================================================================
 
-    // Accumulators are passed by ref so fractional progress carries between calls.
     public void AdvanceOneMinute(GameState game, ref float energyAccumulator, ref float gainAccumulator, ref float toiletAccumulator)
     {
         float energyCostToApply = energyCost;
@@ -58,28 +91,28 @@ public class ActivityDefinition : ScriptableObject
             toiletCostToApply *= 0.7f;   // less drain
         }
 
-        // --- ENERGY: add this minute's slice, then apply whole points ---
+        // --- ENERGY ---
         energyAccumulator += energyCostToApply / timeCost;
         while (energyAccumulator >= 1f)
         {
             energyAccumulator -= 1f;
             game.employee.energy -= 1;
         }
-        while (energyAccumulator <= -1f)   // restoring (coffee)
+        while (energyAccumulator <= -1f)
         {
             energyAccumulator += 1f;
             game.employee.energy += 1;
         }
         game.employee.energy = Mathf.Clamp(game.employee.energy, 0, 100);
 
-        // --- TOILET: same shape ---
+        // --- TOILET ---
         toiletAccumulator += toiletCostToApply / timeCost;
         while (toiletAccumulator >= 1f)
         {
             toiletAccumulator -= 1f;
             game.employee.toilet -= 1;
         }
-        while (toiletAccumulator <= -1f)   // restoring (using the toilet)
+        while (toiletAccumulator <= -1f)
         {
             toiletAccumulator += 1f;
             game.employee.toilet += 1;
@@ -95,29 +128,24 @@ public class ActivityDefinition : ScriptableObject
         }
     }
 
-    // The total multiplier on this activity's gain right now: energy/toilet
-    // effectiveness times whatever skill bonuses apply. Used both to APPLY
-    // gain (above) and to SHOW efficiency to the player, so they can't drift.
+    // The total multiplier on this activity's gain right now. Used both to
+    // APPLY gain and to SHOW efficiency, so they can't drift.
     public float EfficiencyFor(GameState game)
     {
         float efficiency = Effectiveness(game);
 
-        // charisma helps social activities, proportional to level
-        if (affects == StatType.CoworkerRelationship || affects == StatType.Relationships)
+        if (AffectsRelationships())
             efficiency *= 1f + game.GetSkillLevel(SkillType.Charisma) * 0.1f;
 
-        // programming speeds work once it hits level 5
-        if (affects == StatType.Career && game.GetSkillLevel(SkillType.Programming) >= 5)
+        if (AffectsCareer() && game.GetSkillLevel(SkillType.Programming) >= 5)
             efficiency *= 1.5f;
 
-        // science speeds ALL skill-building once it hits level 7
-        if (buildsSkill && game.GetSkillLevel(SkillType.Science) >= 7)
+        if (BuildsAnySkill() && game.GetSkillLevel(SkillType.Science) >= 7)
             efficiency *= 1.5f;
 
         return efficiency;
     }
 
-    // Tired hurts across a wide range; a full bladder only bites at the end.
     float Effectiveness(GameState game)
     {
         const int energyThreshold = 30;
@@ -139,39 +167,31 @@ public class ActivityDefinition : ScriptableObject
         return energyMult * toiletMult;
     }
 
+    // Apply every effect this activity carries.
     void ApplyGain(GameState game)
     {
-        if (buildsSkill && skillToBuild == SkillType.Writing)
+        foreach (GainEffect g in gains)
         {
-            game.ChangeSkill(SkillType.Writing, 1);
-            if (game.GetSkill(SkillType.Writing) % 3 == 0)
-                game.ChangeSkill(SkillType.Charisma, 1);   // trickle, 1 per 3 writing
-            return;
+            if (g.isSkill)
+            {
+                game.ChangeSkill(g.skill, g.amount);
+            }
+            else if (g.stat == StatType.Career)
+            {
+                game.employee.career += g.amount;
+            }
+            else if (g.stat == StatType.CoworkerRelationship)
+            {
+                if (g.targetCoworker != null)
+                    game.ChangeRelationship(g.targetCoworker, g.amount);
+            }
+            else if (g.stat == StatType.Relationships)
+            {
+                List<CoworkerDefinition> keys = new List<CoworkerDefinition>(game.relationships.Keys);
+                foreach (CoworkerDefinition c in keys)
+                    game.ChangeRelationship(c, g.amount);
+            }
+            // Energy / Toilet aren't gains — handled by energyCost / toiletCost.
         }
-
-        if (buildsSkill)
-        {
-            game.ChangeSkill(skillToBuild, 1);
-            return;
-        }
-
-        if (affects == StatType.Career)
-        {
-            game.employee.career += 1;
-        }
-        else if (affects == StatType.CoworkerRelationship)
-        {
-            game.ChangeRelationship(targetCoworker, 1);
-            game.ChangeSkill(SkillType.Charisma, 1);
-        }
-        else if (affects == StatType.Relationships)
-        {
-            // copy the keys first: ChangeRelationship modifies the dictionary
-            List<CoworkerDefinition> keys = new List<CoworkerDefinition>(game.relationships.Keys);
-            foreach (CoworkerDefinition c in keys)
-                game.ChangeRelationship(c, 1);
-        }
-        else if (affects == StatType.None) { }
-        // Energy and Toilet aren't gains, they're handled by energyCost / toiletCost above.
     }
 }

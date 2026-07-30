@@ -28,6 +28,9 @@ public class DayUI : MonoBehaviour
     [SerializeField] private Image toiletBarFill;
     [SerializeField] private GameObject skillProgressBar;   // the whole bar object
     [SerializeField] private Image skillProgressFill;
+    [SerializeField] private GameObject[] skillBars;      // 3 bar containers
+    [SerializeField] private Image[] skillBarFills;       // their fills
+    [SerializeField] private TextMeshProUGUI[] skillBarLabels;
     [SerializeField] private TextMeshProUGUI skillProgressLabel;
     [SerializeField] private TextMeshProUGUI levelUpText;
     [SerializeField] private AudioClip levelUpChime;
@@ -92,6 +95,13 @@ public class DayUI : MonoBehaviour
     [SerializeField] private AudioClip coffeeLoop;
     [SerializeField] private AudioClip toiletLoop;
     [SerializeField] private AudioClip[] talkingClips;    // three, picked at random
+    
+    [Header("Win condition")]
+    [SerializeField] private int winCareerThreshold = 900;
+    [SerializeField] private int winAvgRelationshipThreshold = 200;
+    [SerializeField] private int winBossRelationshipThreshold = 150;
+    [SerializeField] private CoworkerDefinition bossDefinition;
+    [SerializeField] private int finalDay = 130;   // 130 = week 26, day 5
 
     private CharacterPose lastPose = CharacterPose.Idle;
 
@@ -295,9 +305,10 @@ public class DayUI : MonoBehaviour
         
         playerAnimator.SetInteger("pose", (int)simulation.CurrentPose);
         playerAnimator.SetBool("isTired", simulation.Energy < 30);
-
+    
         UpdateBar(energyBarFill, simulation.Energy);
         UpdateBar(toiletBarFill, simulation.Toilet);
+        UpdateSkillBars();
 
         clockText.text = $"{gameState.DayName()}, Week {gameState.WeekNumber()}/26\n{FormatTime(simulation.Clock)}";
         careerText.text = $"Career: {simulation.Career}";
@@ -389,6 +400,26 @@ public class DayUI : MonoBehaviour
         {
             talkSource.clip = talkingClips[Random.Range(0, talkingClips.Length)];
             talkSource.Play();
+        }
+    }
+    
+    void UpdateSkillBars()
+    {
+        List<SkillType> building = simulation.SkillsBeingBuilt();
+
+        for (int i = 0; i < skillBars.Length; i++)
+        {
+            if (i < building.Count)
+            {
+                SkillType skill = building[i];
+                skillBars[i].SetActive(true);
+                skillBarFills[i].fillAmount = simulation.SkillProgress(skill);
+                skillBarLabels[i].text = $"{skill} → Level {simulation.SkillTargetLevel(skill)}";
+            }
+            else
+            {
+                skillBars[i].SetActive(false);
+            }
         }
     }
 
@@ -580,6 +611,11 @@ public class DayUI : MonoBehaviour
 
     void OnGoHomeClicked()
     {
+        if (gameState.dayNumber >= finalDay)
+        {
+            EndGame();
+            return;
+        }
         gameState.dayNumber++;
         gameState.RecoverOvernight();
 
@@ -591,6 +627,20 @@ public class DayUI : MonoBehaviour
         goHomeButton.gameObject.SetActive(false);
         isPaused = false;
         UpdateDisplay();
+    }
+    
+    void EndGame()
+    {
+        bool won = HasWon();
+        // TODO: show the end screen with won/lost
+        Debug.Log(won ? "YOU WON — you're the boss" : "You didn't make the cut");
+    }
+    
+    bool HasWon()
+    {
+        return simulation.Career >= winCareerThreshold
+               && simulation.AverageRelationship >= winAvgRelationshipThreshold
+               && gameState.GetRelationship(bossDefinition) >= winBossRelationshipThreshold;
     }
 
 
