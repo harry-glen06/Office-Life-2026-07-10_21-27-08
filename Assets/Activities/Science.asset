@@ -14,12 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ActivityDefinition
   activityName: Learning about science
   timeCost: 60
-  energyCost: 20
+  energyCost: 25
   toiletCost: 0
-  affects: 0
-  targetCoworker: {fileID: 0}
   amount: 3
   pose: 1
-  buildsSkill: 1
-  skillToBuild: 4
   adminImproves: 0
+  gains:
+  - isSkill: 1
+    skill: 4
+    stat: 5
+    targetCoworker: {fileID: 0}
+    amount: 1

@@ -254,6 +254,10 @@ public class DayUI : MonoBehaviour
     void HandleWorldClicks()
     {
         if (!Input.GetMouseButtonDown(0)) return;
+        
+        // if the click landed on UI (a button), don't also raycast the world
+        if (UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+            return;
 
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (!Physics.Raycast(ray, out RaycastHit hit)) return;

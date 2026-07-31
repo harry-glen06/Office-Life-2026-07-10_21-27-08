@@ -22,7 +22,8 @@ MonoBehaviour:
       amount: 1
     - affects: 3
       targetCoworker: {fileID: 0}
-      amount: 5
+      amount: 35
   requiredDay: 0
   requiredTime: 0
   chance: 0.1
+  conditions: []

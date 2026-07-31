@@ -14,12 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ActivityDefinition
   activityName: Practing writing
   timeCost: 60
-  energyCost: 20
+  energyCost: 25
   toiletCost: 0
-  affects: 0
-  targetCoworker: {fileID: 0}
-  amount: 3
+  amount: 1
   pose: 1
-  buildsSkill: 1
-  skillToBuild: 2
   adminImproves: 0
+  gains:
+  - isSkill: 1
+    skill: 2
+    stat: 0
+    targetCoworker: {fileID: 0}
+    amount: 3
+  - isSkill: 1
+    skill: 0
+    stat: 0
+    targetCoworker: {fileID: 0}
+    amount: 1

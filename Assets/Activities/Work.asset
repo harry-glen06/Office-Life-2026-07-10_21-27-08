@@ -15,8 +15,13 @@ MonoBehaviour:
   activityName: Working
   timeCost: 120
   energyCost: 45
-  affects: 0
-  amount: 7
   toiletCost: 0
+  amount: 7
   pose: 1
-  targetCoworker: {fileID: 0}
+  adminImproves: 0
+  gains:
+  - isSkill: 0
+    skill: 0
+    stat: 0
+    targetCoworker: {fileID: 0}
+    amount: 1

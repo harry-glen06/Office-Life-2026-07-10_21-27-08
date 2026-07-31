@@ -16,10 +16,7 @@ MonoBehaviour:
   timeCost: 15
   energyCost: -20
   toiletCost: 25
-  affects: 0
-  targetCoworker: {fileID: 0}
   amount: 0
   pose: 3
-  buildsSkill: 0
-  skillToBuild: 0
   adminImproves: 1
+  gains: []

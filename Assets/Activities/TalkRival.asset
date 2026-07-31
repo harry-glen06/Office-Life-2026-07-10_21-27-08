@@ -16,9 +16,17 @@ MonoBehaviour:
   timeCost: 45
   energyCost: 25
   toiletCost: 0
-  affects: 2
-  targetCoworker: {fileID: 11400000, guid: ecb098f6540b64d6795448c76938c010, type: 2}
   amount: 1
   pose: 2
-  buildsSkill: 1
-  skillToBuild: 0
+  adminImproves: 0
+  gains:
+  - isSkill: 1
+    skill: 0
+    stat: 5
+    targetCoworker: {fileID: 0}
+    amount: 1
+  - isSkill: 0
+    skill: 0
+    stat: 2
+    targetCoworker: {fileID: 11400000, guid: ecb098f6540b64d6795448c76938c010, type: 2}
+    amount: 1

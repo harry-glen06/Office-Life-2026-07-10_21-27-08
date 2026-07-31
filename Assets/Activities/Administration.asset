@@ -14,12 +14,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ActivityDefinition
   activityName: Doing "enter name here"s work
   timeCost: 60
-  energyCost: 20
+  energyCost: 25
   toiletCost: 0
-  affects: 0
-  targetCoworker: {fileID: 0}
-  amount: 3
+  amount: 2
   pose: 1
-  buildsSkill: 1
-  skillToBuild: 3
   adminImproves: 0
+  gains:
+  - isSkill: 1
+    skill: 3
+    stat: 5
+    targetCoworker: {fileID: 0}
+    amount: 1
+  - isSkill: 0
+    skill: 3
+    stat: 0
+    targetCoworker: {fileID: 0}
+    amount: 1
+  - isSkill: 0
+    skill: 3
+    stat: 2
+    targetCoworker: {fileID: 11400000, guid: 061a7782f6d1e43c0b10d813beebd9a7, type: 2}
+    amount: 1

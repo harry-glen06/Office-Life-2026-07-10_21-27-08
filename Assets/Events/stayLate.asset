@@ -25,7 +25,7 @@ MonoBehaviour:
       amount: 3
     - affects: 3
       targetCoworker: {fileID: 0}
-      amount: -20
+      amount: -25
   - label: Decline
     effects:
     - affects: 0
@@ -33,7 +33,14 @@ MonoBehaviour:
       amount: -3
     - affects: 3
       targetCoworker: {fileID: 0}
-      amount: 8
+      amount: 10
   requiredDay: 0
   requiredTime: 2
   chance: 0.2
+  conditions:
+  - stat: 3
+    mustBeBelow: 0
+    threshold: 30
+    targetCoworker: {fileID: 0}
+    checksSkill: 0
+    skill: 0
