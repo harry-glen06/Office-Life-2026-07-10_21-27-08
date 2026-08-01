@@ -26,22 +26,18 @@ public class DayUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI careerText;
     [SerializeField] private Image energyBarFill;
     [SerializeField] private Image toiletBarFill;
-    [SerializeField] private GameObject skillProgressBar;   // the whole bar object
-    [SerializeField] private Image skillProgressFill;
-    [SerializeField] private GameObject[] skillBars;      // 3 bar containers
+    [SerializeField] private GameObject[] skillBars;      // bar containers (pool)
     [SerializeField] private Image[] skillBarFills;       // their fills
     [SerializeField] private TextMeshProUGUI[] skillBarLabels;
-    [SerializeField] private TextMeshProUGUI skillProgressLabel;
     [SerializeField] private TextMeshProUGUI levelUpText;
     [SerializeField] private AudioClip levelUpChime;
 
-    
     // ---------- End Screen ----------
     [Header("End screen")]
     [SerializeField] private GameObject endScreenPanel;
     [SerializeField] private TextMeshProUGUI endScreenText;
     [SerializeField] private Button playAgainButton;
-    
+
     // ---------- Skills -------
     [Header("Skills")]
     [SerializeField] private GameObject skillPanel;
@@ -92,17 +88,18 @@ public class DayUI : MonoBehaviour
     [SerializeField] private float secondsPerMinute = 1f;
     [SerializeField] private float minutesPerUnit = 1f;
     [SerializeField] private SunController sun;
-    
+
     // ---------- sound ----------
     [Header("Sound")]
-    [SerializeField] private AudioSource loopSource;      // for working/coffee/toilet
-    [SerializeField] private AudioSource oneShotSource;   // for talking, events
+    [SerializeField] private AudioSource loopSource;
+    [SerializeField] private AudioSource oneShotSource;
     [SerializeField] private AudioSource talkSource;
     [SerializeField] private AudioClip workingLoop;
     [SerializeField] private AudioClip coffeeLoop;
     [SerializeField] private AudioClip toiletLoop;
-    [SerializeField] private AudioClip[] talkingClips;    // three, picked at random
-    
+    [SerializeField] private AudioClip[] talkingClips;
+
+    // ---------- Win condition ----------
     [Header("Win condition")]
     [SerializeField] private int winCareerThreshold = 900;
     [SerializeField] private int winAvgRelationshipThreshold = 200;
@@ -116,18 +113,19 @@ public class DayUI : MonoBehaviour
     private GameState gameState;
     private DaySimulation simulation;
     private float secondsAccumulator = 0f;
-    private bool isPaused = false;
+
+    private bool isPaused = false;    // the PLAYER paused the clock
+    private bool modalOpen = false;   // a blocking UI (menu/event/end) is up
 
     private string failureMessage = "";
     private float failureTimer = 0f;
 
     private Dictionary<CoworkerDefinition, Button> coworkerButtons = new Dictionary<CoworkerDefinition, Button>();
     private Dictionary<CoworkerDefinition, TextMeshProUGUI> relationshipRows = new Dictionary<CoworkerDefinition, TextMeshProUGUI>();
-    
+
     private Transform walkTarget;
-    private int totalTravelMinutes;
     private Vector3 walkStart;
-    
+
     private Dictionary<SkillType, int> lastSkillLevels = new Dictionary<SkillType, int>();
     private string levelUpMessage = "";
     private float levelUpTimer = 0f;
@@ -146,26 +144,26 @@ public class DayUI : MonoBehaviour
         eventUI.onEventClosed = OnEventClosed;
 
         StartNewDay();
-
         WireButtons();
-
         BuildCoworkerButtons();
         BuildRelationshipRows();
 
         coworkerPanel.SetActive(false);
         relationshipPanel.SetActive(false);
         goHomeButton.gameObject.SetActive(false);
-        
+        endScreenPanel.SetActive(false);
+        modalOpen = false;
+
         workButton.onClick.AddListener(() => OnSkillChosen(workActivity));
         programmingButton.onClick.AddListener(() => OnSkillChosen(programmingActivity));
         writingButton.onClick.AddListener(() => OnSkillChosen(writingActivity));
         adminButton.onClick.AddListener(() => OnSkillChosen(adminActivity));
         scienceButton.onClick.AddListener(() => OnSkillChosen(scienceActivity));
         playAgainButton.onClick.AddListener(OnPlayAgain);
-        
+
         foreach (SkillType type in System.Enum.GetValues(typeof(SkillType)))
             lastSkillLevels[type] = gameState.GetSkillLevel(type);
-    
+
         UpdateSpeedButtons(playButton);
         UpdateDisplay();
     }
@@ -189,7 +187,6 @@ public class DayUI : MonoBehaviour
         superButton.onClick.AddListener(OnSuperClicked);
     }
 
-    // Creates a fresh day and gives it everything it needs.
     void StartNewDay()
     {
         simulation = new DaySimulation(gameState);
@@ -205,7 +202,21 @@ public class DayUI : MonoBehaviour
     void Update()
     {
         HandleWorldClicks();
-        
+
+        // speed keys only when no blocking UI is up
+        if (!modalOpen)
+        {
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                if (isPaused) OnPlayClicked();
+                else OnPauseClicked();
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha1)) OnPlayClicked();
+            if (Input.GetKeyDown(KeyCode.Alpha2)) OnFastClicked();
+            if (Input.GetKeyDown(KeyCode.Alpha3)) OnSuperClicked();
+        }
+
+        // walking is visual — runs regardless of pause
         if (simulation.IsTravelling && walkTarget != null)
         {
             float smoothProgress = simulation.TravelProgressSmoothed(secondsAccumulator / secondsPerMinute);
@@ -218,18 +229,14 @@ public class DayUI : MonoBehaviour
         }
         else if (!simulation.IsTravelling && walkTarget != null)
         {
-            // just arrived, face the way the stand-point points
-            playerCharacter.rotation = walkTarget.rotation; 
+            playerCharacter.rotation = walkTarget.rotation;   // face the stand-point on arrival
             walkTarget = null;
         }
 
-        // failure messages fade out in real time, even while paused
+        // real-time timers, even while paused
         if (failureTimer > 0f)
             failureTimer -= Time.deltaTime;
 
-        if (simulation.IsDayOver) return;
-        if (isPaused) return;
-        
         if (levelUpTimer > 0f)
         {
             levelUpTimer -= Time.deltaTime;
@@ -241,17 +248,20 @@ public class DayUI : MonoBehaviour
             levelUpText.gameObject.SetActive(false);
         }
 
-        // Presentation concern: convert real seconds into ticks.
+        if (simulation.IsDayOver) return;
+        if (isPaused || modalOpen) return;
+
+        // convert real seconds into ticks
         secondsAccumulator += Time.deltaTime;
         if (secondsAccumulator >= secondsPerMinute)
         {
             secondsAccumulator -= secondsPerMinute;
-            simulation.Tick();       // the CONSEQUENCE lives in the sim
+            simulation.Tick();
 
             EventDefinition ev = simulation.ConsumePendingEvent();
             if (ev != null)
             {
-                isPaused = true;
+                modalOpen = true;
                 eventUI.ShowEvent(ev);
             }
 
@@ -262,26 +272,26 @@ public class DayUI : MonoBehaviour
     void HandleWorldClicks()
     {
         if (!Input.GetMouseButtonDown(0)) return;
-        
-        // if the click landed on UI (a button), don't also raycast the world
+
+        // clicking UI (a button) shouldn't also raycast the world
         if (UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
             return;
 
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (!Physics.Raycast(ray, out RaycastHit hit)) return;
-        
+
         ClickableObject clickable = hit.collider.GetComponentInParent<ClickableObject>();
         if (clickable != null)
         {
             if (clickable.opensSkillMenu)
             {
                 skillPanel.SetActive(true);
-                isPaused = true;
+                modalOpen = true;
                 return;
             }
-            
+
             if (clickable.standPoint == null) return;
-            
+
             float distance = Vector3.Distance(playerCharacter.position, clickable.standPoint.position);
             int travelMinutes = Mathf.Max(1, Mathf.RoundToInt(distance * minutesPerUnit));
 
@@ -296,10 +306,9 @@ public class DayUI : MonoBehaviour
         }
     }
 
-    // Called by EventUI once the player has resolved an event.
     void OnEventClosed()
     {
-        isPaused = false;
+        modalOpen = false;
         UpdateDisplay();
     }
 
@@ -311,13 +320,13 @@ public class DayUI : MonoBehaviour
     void UpdateDisplay()
     {
         UpdateAudio();
-        
+
         float dayProgress = (simulation.Clock - 540f) / (1020f - 540f);
         sun.SetDayProgress(dayProgress);
-        
+
         playerAnimator.SetInteger("pose", (int)simulation.CurrentPose);
         playerAnimator.SetBool("isTired", simulation.Energy < 30);
-    
+
         UpdateBar(energyBarFill, simulation.Energy);
         UpdateBar(toiletBarFill, simulation.Toilet);
         UpdateSkillBars();
@@ -327,21 +336,10 @@ public class DayUI : MonoBehaviour
         relationshipButton.GetComponentInChildren<TextMeshProUGUI>().text =
             $"Relationships: {simulation.AverageRelationship}";
 
-        // keep the dropdown live while it's open
         if (relationshipPanel.activeSelf)
             RefreshRelationshipRows();
-        
+
         CheckSkillLevelUps();
-        if (simulation.IsBuildingSkill)
-        {
-            skillProgressBar.SetActive(true);
-            skillProgressFill.fillAmount = simulation.CurrentSkillProgress;
-            skillProgressLabel.text = $"{simulation.CurrentSkillName} → Level {simulation.CurrentSkillTargetLevel}";
-        }
-        else
-        {
-            skillProgressBar.SetActive(false);
-        }
 
         if (simulation.IsDayOver)
         {
@@ -368,30 +366,27 @@ public class DayUI : MonoBehaviour
         else
         {
             actionText.color = Color.white;
-            // Idle: nothing in progress, enable whatever is affordable.
             actionText.text = "";
             socialiseButton.interactable = true;
             foreach (ActivitySlot slot in slots)
                 slot.button.interactable = simulation.CanAfford(slot.activity);
         }
 
-        // a recent failure overrides whatever the state text would have been
         if (failureTimer > 0f)
         {
             actionText.color = Color.white;
             actionText.text = failureMessage;
         }
     }
-    
+
     void UpdateAudio()
     {
         CharacterPose pose = simulation.CurrentPose;
-        if (pose == lastPose) return;   // only act on change
+        if (pose == lastPose) return;
         lastPose = pose;
 
-        // stop any loop when leaving a looping activity
         loopSource.Stop();
-        talkSource.Stop(); 
+        talkSource.Stop();
 
         if (pose == CharacterPose.Working)
         {
@@ -414,7 +409,7 @@ public class DayUI : MonoBehaviour
             talkSource.Play();
         }
     }
-    
+
     void UpdateSkillBars()
     {
         List<SkillType> building = simulation.SkillsBeingBuilt();
@@ -435,7 +430,6 @@ public class DayUI : MonoBehaviour
         }
     }
 
-    // Turns a refused action into something the player can read.
     void ReportResult(ActivityResult result)
     {
         if (result == ActivityResult.Started) return;
@@ -449,10 +443,9 @@ public class DayUI : MonoBehaviour
         else
             failureMessage = "The day's over";
 
-        failureTimer = 2f;   // seconds on screen
+        failureTimer = 2f;
     }
 
-    // Sets a bar's fill and colours it by how low the value is.
     void UpdateBar(Image fill, int value)
     {
         fill.fillAmount = (float)value / 100f;
@@ -460,7 +453,7 @@ public class DayUI : MonoBehaviour
         if (value < 15)
             fill.color = Color.red;
         else if (value < 30)
-            fill.color = new Color(1f, 0.6f, 0f);   // amber
+            fill.color = new Color(1f, 0.6f, 0f);
         else
             fill.color = Color.green;
     }
@@ -472,7 +465,6 @@ public class DayUI : MonoBehaviour
             slot.button.interactable = on;
     }
 
-    // Pure display formatting, correctly a UI concern.
     string FormatTime(int minutes)
     {
         int hours = minutes / 60;
@@ -497,7 +489,7 @@ public class DayUI : MonoBehaviour
 
 
     // =====================================================================
-    // Coworker panel (pick someone to talk to)
+    // Coworker panel
     // =====================================================================
 
     void BuildCoworkerButtons()
@@ -505,11 +497,10 @@ public class DayUI : MonoBehaviour
         foreach (CoworkerDefinition coworker in coworkers)
         {
             GameObject buttonObj = Instantiate(coworkerButtonPrefab, coworkerPanel.transform);
-
             Button btn = buttonObj.GetComponent<Button>();
             coworkerButtons[coworker] = btn;
 
-            CoworkerDefinition c = coworker;   // capture into local for the lambda
+            CoworkerDefinition c = coworker;
             btn.onClick.AddListener(() => OnCoworkerClicked(c));
         }
 
@@ -534,21 +525,27 @@ public class DayUI : MonoBehaviour
     {
         RefreshCoworkerButtons();
         coworkerPanel.SetActive(true);
-        isPaused = true;
+        modalOpen = true;
     }
 
     void OnCoworkerClicked(CoworkerDefinition coworker)
     {
         ReportResult(simulation.DoActivity(coworker.talkActivity));
         coworkerPanel.SetActive(false);
-        isPaused = false;
+        modalOpen = false;
         UpdateDisplay();
     }
-    
+
+    void OnCancelClicked()
+    {
+        coworkerPanel.SetActive(false);
+        modalOpen = false;
+    }
+
     void OnSkillChosen(ActivityDefinition activity)
     {
         skillPanel.SetActive(false);
-        isPaused = false;
+        modalOpen = false;
 
         float distance = Vector3.Distance(playerCharacter.position, computerStandPoint.position);
         int travelMinutes = Mathf.Max(1, Mathf.RoundToInt(distance * minutesPerUnit));
@@ -561,7 +558,7 @@ public class DayUI : MonoBehaviour
         }
         ReportResult(result);
     }
-    
+
     void CheckSkillLevelUps()
     {
         foreach (SkillType type in System.Enum.GetValues(typeof(SkillType)))
@@ -574,7 +571,7 @@ public class DayUI : MonoBehaviour
             }
         }
     }
-    
+
     void OnSkillLevelUp(SkillType type, int newLevel)
     {
         levelUpMessage = $"{type} reached Level {newLevel}!";
@@ -582,15 +579,9 @@ public class DayUI : MonoBehaviour
         oneShotSource.PlayOneShot(levelUpChime);
     }
 
-    void OnCancelClicked()
-    {
-        coworkerPanel.SetActive(false);
-        isPaused = false;
-    }
-
 
     // =====================================================================
-    // Relationship dropdown (read-only breakdown)
+    // Relationship dropdown
     // =====================================================================
 
     void BuildRelationshipRows()
@@ -608,7 +599,6 @@ public class DayUI : MonoBehaviour
             pair.Value.text = $"{pair.Key.coworkerName}: {gameState.GetRelationship(pair.Key)}";
     }
 
-    // Toggles the dropdown open/closed.
     void OnRelationshipClicked()
     {
         bool nowOpen = !relationshipPanel.activeSelf;
@@ -628,19 +618,19 @@ public class DayUI : MonoBehaviour
             EndGame();
             return;
         }
+
         gameState.dayNumber++;
         gameState.RecoverOvernight();
 
         StartNewDay();
         playerCharacter.position = dayStartPoint.position;
         playerCharacter.rotation = dayStartPoint.rotation;
-        walkTarget = null;   // cancel any leftover walk state
+        walkTarget = null;
 
         goHomeButton.gameObject.SetActive(false);
-        isPaused = false;
         UpdateDisplay();
     }
-    
+
     void EndGame()
     {
         bool won = HasWon();
@@ -648,15 +638,15 @@ public class DayUI : MonoBehaviour
         endScreenText.text = won
             ? "The boss retired, and you got the job. You're the boss now."
             : "The boss retired. The job went to the rival.";
-        isPaused = true;   // freeze everything behind the modal
+        modalOpen = true;
     }
-    
+
     void OnPlayAgain()
     {
         UnityEngine.SceneManagement.SceneManager.LoadScene(
             UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
     }
-    
+
     bool HasWon()
     {
         return simulation.Career >= winCareerThreshold
@@ -666,7 +656,7 @@ public class DayUI : MonoBehaviour
 
 
     // =====================================================================
-    // Speed controls
+    // Speed controls (the only place isPaused is touched)
     // =====================================================================
 
     void OnPauseClicked() { isPaused = true;  UpdateSpeedButtons(pauseButton); }
