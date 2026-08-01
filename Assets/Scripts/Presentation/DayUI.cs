@@ -34,6 +34,13 @@ public class DayUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI skillProgressLabel;
     [SerializeField] private TextMeshProUGUI levelUpText;
     [SerializeField] private AudioClip levelUpChime;
+
+    
+    // ---------- End Screen ----------
+    [Header("End screen")]
+    [SerializeField] private GameObject endScreenPanel;
+    [SerializeField] private TextMeshProUGUI endScreenText;
+    [SerializeField] private Button playAgainButton;
     
     // ---------- Skills -------
     [Header("Skills")]
@@ -154,6 +161,7 @@ public class DayUI : MonoBehaviour
         writingButton.onClick.AddListener(() => OnSkillChosen(writingActivity));
         adminButton.onClick.AddListener(() => OnSkillChosen(adminActivity));
         scienceButton.onClick.AddListener(() => OnSkillChosen(scienceActivity));
+        playAgainButton.onClick.AddListener(OnPlayAgain);
         
         foreach (SkillType type in System.Enum.GetValues(typeof(SkillType)))
             lastSkillLevels[type] = gameState.GetSkillLevel(type);
@@ -636,8 +644,17 @@ public class DayUI : MonoBehaviour
     void EndGame()
     {
         bool won = HasWon();
-        // TODO: show the end screen with won/lost
-        Debug.Log(won ? "YOU WON — you're the boss" : "You didn't make the cut");
+        endScreenPanel.SetActive(true);
+        endScreenText.text = won
+            ? "The boss retired, and you got the job. You're the boss now."
+            : "The boss retired. The job went to the rival.";
+        isPaused = true;   // freeze everything behind the modal
+    }
+    
+    void OnPlayAgain()
+    {
+        UnityEngine.SceneManagement.SceneManager.LoadScene(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
     }
     
     bool HasWon()
