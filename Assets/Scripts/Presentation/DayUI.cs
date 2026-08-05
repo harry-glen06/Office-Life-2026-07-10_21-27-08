@@ -12,7 +12,7 @@ public class DayUI : MonoBehaviour
         public Button button;
         public ActivityDefinition activity;
     }
-
+    
     // ---------- Data (authored assets) ----------
     [Header("Data")]
     [SerializeField] private List<CoworkerDefinition> coworkers;
@@ -264,6 +264,14 @@ public class DayUI : MonoBehaviour
                 modalOpen = true;
                 eventUI.ShowEvent(ev);
             }
+            
+            // advance the queue if we just went idle
+            if (!simulation.IsBusy && !simulation.IsTravelling && taskQueue.Count > 0)
+            {
+                QueuedTask next = taskQueue[0];
+                taskQueue.RemoveAt(0);
+                StartTravelTo(next.activity, next.standPoint);
+            }
 
             UpdateDisplay();
         }
@@ -291,21 +299,42 @@ public class DayUI : MonoBehaviour
             }
 
             if (clickable.standPoint == null) return;
-
-            float distance = Vector3.Distance(playerCharacter.position, clickable.standPoint.position);
-            int travelMinutes = Mathf.Max(1, Mathf.RoundToInt(distance * minutesPerUnit));
-
-            ActivityResult result = simulation.StartTravel(clickable.activity, travelMinutes);
-            if (result == ActivityResult.Started)
+            
+            // Busy or travelling? Queue it instead of starting now.
+            if (simulation.IsBusy || simulation.IsTravelling)
             {
-                walkTarget = clickable.standPoint;
-                walkStart = playerCharacter.position;
+                if (taskQueue.Count < maxQueued)
+                {
+                    taskQueue.Add(new QueuedTask { activity = clickable.activity, standPoint = clickable.standPoint });
+                }
+                else
+                {
+                    failureMessage = "Queue is full";
+                    failureTimer = 2f;
+                }
+                UpdateDisplay();
+                return;
             }
-            ReportResult(result);
+            
+            // Idle, start travelling now.
+            StartTravelTo(clickable.activity, clickable.standPoint);
             UpdateDisplay();
         }
     }
+    
+    void StartTravelTo(ActivityDefinition activity, Transform standPoint)
+    {
+        float distance = Vector3.Distance(playerCharacter.position, standPoint.position);
+        int travelMinutes = Mathf.Max(1, Mathf.RoundToInt(distance * minutesPerUnit));
 
+        ActivityResult result = simulation.StartTravel(activity, travelMinutes);
+        if (result == ActivityResult.Started)
+        {
+            walkTarget = standPoint;
+            walkStart = playerCharacter.position;
+        }
+        ReportResult(result);
+    }
     void OnEventClosed()
     {
         modalOpen = false;
@@ -340,7 +369,8 @@ public class DayUI : MonoBehaviour
             RefreshRelationshipRows();
 
         CheckSkillLevelUps();
-
+        // debug temp
+        Debug.Log($"Queue count: {taskQueue.Count}");
         if (simulation.IsDayOver)
         {
             actionText.color = Color.white;
@@ -673,4 +703,13 @@ public class DayUI : MonoBehaviour
 
         active.GetComponent<Image>().color = (active == pauseButton) ? Color.red : Color.green;
     }
+    
+    private struct QueuedTask
+    {
+        public ActivityDefinition activity;
+        public Transform standPoint;
+    }
+
+    private List<QueuedTask> taskQueue = new List<QueuedTask>();
+    private const int maxQueued = 2;   // waiting tasks; +1 running = 3 total
 }
