@@ -372,4 +372,23 @@ public class DaySimulation
         if (events != null)
             triggerEvents = events;
     }
+    
+    public ActivityDefinition CurrentActivityDefinition
+    {
+        get
+        {
+            if (currentActivity != null) return currentActivity;
+            if (state == DayState.Travelling) return queuedActivity;
+            return null;
+        }
+    }
+
+    public void CancelActivity()
+    {
+        if (state == DayState.Busy || state == DayState.Travelling)
+        {
+            state = DayState.Idle;
+            currentActivity = null;
+        }
+    }
 }

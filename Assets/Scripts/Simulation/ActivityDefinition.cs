@@ -18,6 +18,8 @@ public class ActivityDefinition : ScriptableObject
 
     // Everything this activity changes. One entry = one stat or skill nudge.
     public List<GainEffect> gains = new List<GainEffect>();
+    
+    public Sprite icon;
 
 
     // =====================================================================

@@ -35,3 +35,4 @@ MonoBehaviour:
     stat: 2
     targetCoworker: {fileID: 11400000, guid: 061a7782f6d1e43c0b10d813beebd9a7, type: 2}
     amount: 1
+  icon: {fileID: 21300000, guid: acb605da372b34f8daaceed74922416a, type: 3}

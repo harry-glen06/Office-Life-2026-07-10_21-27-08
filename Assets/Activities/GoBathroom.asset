@@ -15,8 +15,9 @@ MonoBehaviour:
   activityName: On the toliet
   timeCost: 10
   energyCost: 0
-  affects: 4
-  amount: 0
   toiletCost: -75
+  amount: 0
   pose: 4
-  targetCoworker: {fileID: 0}
+  adminImproves: 0
+  gains: []
+  icon: {fileID: 21300000, guid: a874faf813c1047ec9feb463d03abc3a, type: 3}

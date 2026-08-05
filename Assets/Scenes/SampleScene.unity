@@ -1057,6 +1057,77 @@ Transform:
   m_Children: []
   m_Father: {fileID: 34034902}
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
+--- !u!1 &189847142
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 189847146}
+  - component: {fileID: 189847145}
+  - component: {fileID: 189847147}
+  m_Layer: 5
+  m_Name: QueuePanel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!222 &189847145
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 189847142}
+  m_CullTransparentMesh: 1
+--- !u!224 &189847146
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 189847142}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 766672145}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 50, y: 0}
+  m_SizeDelta: {x: -100, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &189847147
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 189847142}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59f8146938fff824cb5fd77236b75775, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.VerticalLayoutGroup
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 6
+  m_Spacing: 0
+  m_ChildForceExpandWidth: 1
+  m_ChildForceExpandHeight: 1
+  m_ChildControlWidth: 0
+  m_ChildControlHeight: 0
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 1
 --- !u!1 &197112521
 GameObject:
   m_ObjectHideFlags: 0
@@ -4336,6 +4407,7 @@ RectTransform:
   - {fileID: 1543610613}
   - {fileID: 197112524}
   - {fileID: 676090369}
+  - {fileID: 189847146}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -4374,8 +4446,6 @@ MonoBehaviour:
   careerText: {fileID: 1195512741}
   energyBarFill: {fileID: 332086181}
   toiletBarFill: {fileID: 1711510998}
-  skillProgressBar: {fileID: 1951664332}
-  skillProgressFill: {fileID: 1265563532}
   skillBars:
   - {fileID: 1951664332}
   - {fileID: 1513926521}
@@ -4385,7 +4455,6 @@ MonoBehaviour:
   skillBarLabels:
   - {fileID: 1137464982}
   - {fileID: 907387288}
-  skillProgressLabel: {fileID: 1137464982}
   levelUpText: {fileID: 197112522}
   levelUpChime: {fileID: 8300000, guid: 2d0c057a869774cedb98747830470e72, type: 3}
   endScreenPanel: {fileID: 676090368}
@@ -4414,6 +4483,8 @@ MonoBehaviour:
   triggerEvents:
   - {fileID: 11400000, guid: a93bcf0ffc59048e29e78539637dbd90, type: 2}
   - {fileID: 11400000, guid: 64f649bfd31cd46c78288f87c2a368b4, type: 2}
+  queuePanel: {fileID: 189847142}
+  queueIconPrefab: {fileID: 2658625835432256578, guid: 8927c1de3c87f45ad9b35a29f26ff296, type: 3}
   playerAnimator: {fileID: 143084828}
   playerCharacter: {fileID: 143084829}
   dayStartPoint: {fileID: 26698051}

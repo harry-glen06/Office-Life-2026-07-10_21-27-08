@@ -20,3 +20,4 @@ MonoBehaviour:
   pose: 3
   adminImproves: 1
   gains: []
+  icon: {fileID: 21300000, guid: 2664b592986c049aebc6a086a203507f, type: 3}

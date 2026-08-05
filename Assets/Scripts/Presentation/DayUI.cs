@@ -71,7 +71,12 @@ public class DayUI : MonoBehaviour
     [Header("Events")]
     [SerializeField] private EventUI eventUI;
     [SerializeField] private List<EventDefinition> triggerEvents;
-
+  
+    // ---------- Task Queue UI ----------
+    [Header("Task queue display")]
+    [SerializeField] private GameObject queuePanel;
+    [SerializeField] private GameObject queueIconPrefab;
+    
     // ---------- Character ----------
     [Header("Character")]
     [SerializeField] private Animator playerAnimator;
@@ -367,10 +372,11 @@ public class DayUI : MonoBehaviour
 
         if (relationshipPanel.activeSelf)
             RefreshRelationshipRows();
-
+        
+        RefreshQueueDisplay();
+        
         CheckSkillLevelUps();
-        // debug temp
-        Debug.Log($"Queue count: {taskQueue.Count}");
+
         if (simulation.IsDayOver)
         {
             actionText.color = Color.white;
@@ -712,4 +718,52 @@ public class DayUI : MonoBehaviour
 
     private List<QueuedTask> taskQueue = new List<QueuedTask>();
     private const int maxQueued = 2;   // waiting tasks; +1 running = 3 total
+    
+    void RefreshQueueDisplay()
+    {
+        foreach (Transform child in queuePanel.transform)
+            Destroy(child.gameObject);
+
+        if (simulation.IsBusy || simulation.IsTravelling)
+        {
+            ActivityDefinition current = simulation.CurrentActivityDefinition;
+            if (current != null)
+                AddQueueIcon(current.icon, true, -1);
+        }
+
+        for (int i = 0; i < taskQueue.Count; i++)
+        {
+            int index = i;
+            AddQueueIcon(taskQueue[index].activity.icon, false, index);
+        }
+    }
+
+    void AddQueueIcon(Sprite icon, bool isCurrent, int queueIndex)
+    {
+        GameObject iconObj = Instantiate(queueIconPrefab, queuePanel.transform);
+        iconObj.GetComponent<Image>().sprite = icon;
+
+        Button btn = iconObj.GetComponent<Button>();
+        if (isCurrent)
+            btn.onClick.AddListener(() => OnCancelCurrent());
+        else
+        {
+            int idx = queueIndex;
+            btn.onClick.AddListener(() => OnRemoveQueued(idx));
+        }
+    }
+
+    void OnCancelCurrent()
+    {
+        simulation.CancelActivity();
+        walkTarget = null;
+        UpdateDisplay();
+    }
+
+    void OnRemoveQueued(int index)
+    {
+        if (index >= 0 && index < taskQueue.Count)
+            taskQueue.RemoveAt(index);
+        UpdateDisplay();
+    }
 }
